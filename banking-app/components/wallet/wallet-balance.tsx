@@ -3,8 +3,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowUpRight, ArrowDownRight, TrendingUp, Eye, EyeOff } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, TrendingUp, Eye, EyeOff, Building } from "lucide-react"
 import { useState } from "react"
+import Link from "next/link"
 
 export default function WalletBalance() {
   const [showBalance, setShowBalance] = useState(true)
@@ -70,6 +71,12 @@ export default function WalletBalance() {
                 <div className="text-sm font-bold">{showBalance ? "$24,680.42" : "••••••"}</div>
               </div>
             </div>
+            <Button variant="outline" className="w-full" asChild>
+              <Link href="/bank-accounts">
+                <Building className="mr-2 h-4 w-4" />
+                View All Bank Accounts
+              </Link>
+            </Button>
           </TabsContent>
         </Tabs>
       </CardContent>

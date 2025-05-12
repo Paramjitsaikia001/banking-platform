@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { PlusCircle, ArrowUpRight, ArrowDownRight, CreditCard, Banknote } from "lucide-react"
+import { PlusCircle, ArrowUpRight, ArrowDownRight, CreditCard, Building } from "lucide-react"
+import Link from "next/link"
 
 export default function WalletActions() {
   return (
@@ -27,9 +28,11 @@ export default function WalletActions() {
             <CreditCard className="h-4 w-4" />
             <span>Link Card</span>
           </Button>
-          <Button variant="outline" className="flex items-center justify-center gap-2 col-span-2">
-            <Banknote className="h-4 w-4" />
-            <span>Transfer to Bank</span>
+          <Button variant="outline" className="flex items-center justify-center gap-2 col-span-2" asChild>
+            <Link href="/bank-accounts">
+              <Building className="h-4 w-4 mr-2" />
+              <span>Manage Bank Accounts</span>
+            </Link>
           </Button>
         </div>
       </CardContent>

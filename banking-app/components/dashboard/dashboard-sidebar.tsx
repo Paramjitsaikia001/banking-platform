@@ -18,6 +18,7 @@ import {
   LogOut,
   Menu,
   X,
+  Building,
 } from "lucide-react"
 import { useAuth } from "@/app/context/auth-context"
 
@@ -29,6 +30,7 @@ export default function DashboardSidebar() {
   const menuItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
     { icon: Wallet, label: "Wallet", href: "/wallet" },
+    { icon: Building, label: "Bank Accounts", href: "/bank-accounts" },
     { icon: Send, label: "Payments", href: "/payments" },
     { icon: Receipt, label: "Bills", href: "/bills" },
     { icon: Bell, label: "Notifications", href: "/notifications" },
