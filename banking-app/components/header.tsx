@@ -40,12 +40,12 @@ export default function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full border-b ${isScrolled ? "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" : "bg-background"}`}
+      className={`flex justify-center sticky top-0 z-50 w-full border-b ${isScrolled ? "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" : "bg-background"}`}
     >
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center space-x-2">
-            <CreditCard className="h-6 w-6" />
+            <CreditCard className="h-6 w-6" />                              {/* card logo */}
             <span className="font-bold text-xl">BankApp</span>
           </Link>
 
