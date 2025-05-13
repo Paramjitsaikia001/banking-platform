@@ -39,11 +39,10 @@ export default function Testimonials() {
   ]
 
   return (
-    <section id="testimonials" className="w-full py-12 md:py-24 lg:py-32">
+    <section id="testimonials" className="flex justify-center w-full py-12 md:py-24 lg:py-32">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center space-y-4 text-center">
           <div className="space-y-2">
-            <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Testimonials</div>
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">What Our Users Say</h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
               Don't just take our word for it. Here's what our customers have to say about their experience.

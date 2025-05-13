@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2 } from "lucide-react"
 
 export default function Hero() {
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
+    <section className="flex justify-center items-center w-full py-12 md:py-24 lg:py-32 xl:py-0 min-h-[calc(100vh-4rem)]">
       <div className="container px-4 md:px-6">
         <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
           <div className="flex flex-col justify-center space-y-4">
@@ -44,7 +44,7 @@ export default function Hero() {
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <div className="relative w-full aspect-square md:aspect-[4/3] lg:aspect-[3/4] overflow-hidden rounded-xl bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/20 p-1">
+            <div className="relative w-full aspect-square md:aspect-[4/3] lg:aspect-[4/4] overflow-hidden rounded-xl bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/20 p-1">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-full max-w-[80%] rounded-lg bg-background/80 backdrop-blur-sm p-4 md:p-8 shadow-lg">
                   <div className="space-y-2 mb-4">

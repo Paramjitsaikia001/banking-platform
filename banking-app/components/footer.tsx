@@ -3,7 +3,7 @@ import { CreditCard, Facebook, Instagram, Twitter } from "lucide-react"
 
 export default function Footer() {
   return (
-    <footer className="border-t bg-background">
+    <footer className="flex justify-center border-t bg-background">
       <div className="container py-8 md:py-12">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
           <div className="col-span-2 lg:col-span-2">
@@ -108,9 +108,6 @@ export default function Footer() {
         <div className="mt-8 border-t pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} BankApp. All rights reserved.
-          </p>
-          <p className="text-xs text-muted-foreground mt-4 md:mt-0">
-            This is a demo application for educational purposes only.
           </p>
         </div>
       </div>
