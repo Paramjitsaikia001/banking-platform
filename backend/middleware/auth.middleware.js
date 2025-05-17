@@ -2,47 +2,30 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 
-exports.protect = async (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
-    let token;
-    
-    // Check if token exists in headers
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
-    ) {
-      token = req.headers.authorization.split(' ')[1];
-    }
+    const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'You are not logged in. Please log in to get access',
-      });
+      return res.status(401).json({ message: 'Authentication required' });
     }
 
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ _id: decoded.userId });
 
-    // Check if user still exists
-    const user = await User.findById(decoded.id);
     if (!user) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'The user belonging to this token no longer exists',
-      });
+      return res.status(401).json({ message: 'User not found' });
     }
 
-    // Grant access to protected route
     req.user = user;
+    req.token = token;
     next();
   } catch (error) {
-    return res.status(401).json({
-      status: 'error',
-      message: 'Invalid token or token expired',
-    });
+    res.status(401).json({ message: 'Please authenticate' });
   }
 };
+
+module.exports = auth;
 
 // Middleware to verify transaction PIN
 exports.verifyPin = async (req, res, next) => {

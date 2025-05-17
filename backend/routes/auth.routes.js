@@ -2,16 +2,19 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
-const { protect } = require('../middleware/auth.middleware');
+const auth = require('../middleware/auth.middleware');
 
-// Public routes
-router.post('/register', authController.register);
+// Registration flow routes
+router.post('/start-registration', authController.startRegistration);
+router.post('/verify-phone', authController.verifyPhone);
+router.post('/register', authController.registerWithEmail);
+router.post('/verify-email', authController.verifyEmail);
+
+// Login route
 router.post('/login', authController.login);
 
 // Protected routes
-router.use(protect); // All routes below will use this middleware
-router.get('/me', authController.getCurrentUser);
-router.post('/pin', authController.setPin);
-router.post('/kyc', authController.submitKyc);
+router.get('/me', auth, authController.getCurrentUser);
+router.post('/kyc', auth, authController.submitKyc);
 
 module.exports = router;

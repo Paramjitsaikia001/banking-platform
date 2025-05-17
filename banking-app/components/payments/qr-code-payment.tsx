@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { QrCode, Camera, Copy, Download, CreditCard } from "lucide-react"
+import ReactDOM from 'react-dom';
+import {QRCodeSVG} from 'qrcode.react';
+import { useState, useEffect } from 'react';
 
 export default function QRCodePayment() {
   const [amount, setAmount] = useState("")
@@ -87,3 +89,5 @@ export default function QRCodePayment() {
     </Card>
   )
 }
+
+

@@ -1,72 +1,52 @@
 // backend/models/bankAccount.model.js
 const mongoose = require('mongoose');
 
-const bankAccountSchema = new mongoose.Schema(
-  {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    bankName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    accountHolderName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    accountNumber: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    ifscCode: {
-      type: String,
-      required: true,
-      trim: true,
-      uppercase: true,
-    },
-    accountType: {
-      type: String,
-      enum: ['savings', 'current', 'other'],
-      default: 'savings',
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    isPrimary: {
-      type: Boolean,
-      default: false,
-    },
-    // For mock data
-    mockBalance: {
-      type: Number,
-      default: 10000,
-    },
+const bankAccountSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  {
-    timestamps: true,
+  accountNumber: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  accountType: {
+    type: String,
+    enum: ['savings', 'checking', 'business'],
+    required: true
+  },
+  balance: {
+    type: Number,
+    default: 0,
+    required: true
+  },
+  currency: {
+    type: String,
+    default: 'USD',
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'frozen'],
+    default: 'active'
+  },
+  isDefault: {
+    type: Boolean,
+    default: false
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
-);
-
-// Ensure only one primary account per user
-bankAccountSchema.pre('save', async function (next) {
-  if (this.isPrimary) {
-    // Set all other accounts to non-primary
-    await this.constructor.updateMany(
-      { userId: this.userId, _id: { $ne: this._id } },
-      { $set: { isPrimary: false } }
-    );
-  }
-  next();
+}, {
+  timestamps: true
 });
-
-// Create a compound index for userId and accountNumber
-bankAccountSchema.index({ userId: 1, accountNumber: 1 }, { unique: true });
 
 const BankAccount = mongoose.model('BankAccount', bankAccountSchema);
 

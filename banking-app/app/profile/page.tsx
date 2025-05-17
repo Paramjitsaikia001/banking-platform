@@ -29,6 +29,7 @@ export default function ProfilePage() {
           <SecuritySettings />
         </Suspense>
       </div>
+      
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <Suspense
           fallback={
