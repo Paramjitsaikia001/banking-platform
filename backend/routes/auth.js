@@ -6,6 +6,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const speakeasy = require('speakeasy');
 
+// In-memory storage for testing
+const otpStore = new Map();
+
 // Start registration with phone number
 router.post('/start-registration', async (req, res) => {
     try {
@@ -17,13 +20,11 @@ router.post('/start-registration', async (req, res) => {
             return res.status(400).json({ message: 'Phone number already registered' });
         }
 
-        // Generate and send OTP
+        // Generate OTP
         const otp = generateOTP();
-        const otpSecret = speakeasy.generateSecret().base32;
 
-        // Store OTP secret in session or temporary storage
-        req.session.otpSecret = otpSecret;
-        req.session.phoneNumber = phoneNumber;
+        // Store OTP in memory
+        otpStore.set(phoneNumber, otp);
 
         // Send OTP via SMS
         const sent = await sendSMSOTP(phoneNumber, otp);
@@ -43,14 +44,19 @@ router.post('/verify-phone', async (req, res) => {
     try {
         const { phoneNumber, otp } = req.body;
 
+        // Get stored OTP
+        const storedOTP = otpStore.get(phoneNumber);
+        if (!storedOTP) {
+            return res.status(400).json({ message: 'OTP expired or not found' });
+        }
+
         // Verify OTP
-        const isValid = verifyOTP(otp, req.session.otpSecret);
-        if (!isValid) {
+        if (otp !== storedOTP) {
             return res.status(400).json({ message: 'Invalid OTP' });
         }
 
-        // Clear OTP secret from session
-        delete req.session.otpSecret;
+        // Clear OTP from memory
+        otpStore.delete(phoneNumber);
 
         res.status(200).json({ message: 'Phone number verified successfully' });
     } catch (error) {
@@ -95,7 +101,7 @@ router.post('/register', async (req, res) => {
 // Send email verification
 router.post('/send-email-verification', async (req, res) => {
     try {
-        const { email } = req.body;
+        const { email, phoneNumber } = req.body;
 
         // Check if email already exists
         const existingUser = await User.findOne({ email });
@@ -103,13 +109,14 @@ router.post('/send-email-verification', async (req, res) => {
             return res.status(400).json({ message: 'Email already registered' });
         }
 
-        // Generate and send OTP
+        // Generate OTP
         const otp = generateOTP();
-        const otpSecret = speakeasy.generateSecret().base32;
 
-        // Store OTP secret in session
-        req.session.emailOtpSecret = otpSecret;
-        req.session.email = email;
+        // Store OTP and phone number in memory
+        otpStore.set(email, {
+            otp,
+            phoneNumber
+        });
 
         // Send OTP via email
         const sent = await sendEmailOTP(email, otp);
@@ -129,14 +136,19 @@ router.post('/verify-email', async (req, res) => {
     try {
         const { email, otp } = req.body;
 
+        // Get stored OTP and phone number
+        const storedData = otpStore.get(email);
+        if (!storedData) {
+            return res.status(400).json({ message: 'OTP expired or not found' });
+        }
+
         // Verify OTP
-        const isValid = verifyOTP(otp, req.session.emailOtpSecret);
-        if (!isValid) {
+        if (otp !== storedData.otp) {
             return res.status(400).json({ message: 'Invalid OTP' });
         }
 
         // Update user's email
-        const user = await User.findOne({ phoneNumber: req.session.phoneNumber });
+        const user = await User.findOne({ phoneNumber: storedData.phoneNumber });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -145,8 +157,8 @@ router.post('/verify-email', async (req, res) => {
         user.isEmailVerified = true;
         await user.save();
 
-        // Clear OTP secret from session
-        delete req.session.emailOtpSecret;
+        // Clear OTP from memory
+        otpStore.delete(email);
 
         res.status(200).json({ message: 'Email verified successfully' });
     } catch (error) {
@@ -158,10 +170,10 @@ router.post('/verify-email', async (req, res) => {
 // Submit KYC details
 router.post('/kyc', async (req, res) => {
     try {
-        const { fullName, panNumber, aadharNumber, panCardImage, aadharCardImage } = req.body;
+        const { fullName, panNumber, aadharNumber, panCardImage, aadharCardImage, phoneNumber } = req.body;
 
         // Update user's KYC details
-        const user = await User.findOne({ phoneNumber: req.session.phoneNumber });
+        const user = await User.findOne({ phoneNumber });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -172,7 +184,7 @@ router.post('/kyc', async (req, res) => {
             aadharNumber,
             panCardImage,
             aadharCardImage,
-            status: 'PENDING'
+            status: 'pending'
         };
 
         await user.save();

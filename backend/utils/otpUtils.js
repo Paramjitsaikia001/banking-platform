@@ -22,10 +22,7 @@ const transporter = nodemailer.createTransport({
 
 // Generate OTP
 const generateOTP = () => {
-    return speakeasy.totp({
-        secret: speakeasy.generateSecret().base32,
-        digits: 6
-    });
+    return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 // Send SMS OTP

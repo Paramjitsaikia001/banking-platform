@@ -44,6 +44,12 @@ export const authApi = {
     register: (data: any) =>
         api('/auth/register', { method: 'POST', body: data }),
 
+    sendEmailVerification: (email: string, phoneNumber: string) =>
+        api('/auth/send-email-verification', {
+            method: 'POST',
+            body: { email, phoneNumber }
+        }),
+
     verifyEmail: (email: string, otp: string) =>
         api('/auth/verify-email', { method: 'POST', body: { email, otp } }),
 

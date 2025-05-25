@@ -39,13 +39,13 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Set to false for development
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax',
-    httpOnly: true
+    httpOnly: false // Set to false for Postman testing
   }
 }));
 

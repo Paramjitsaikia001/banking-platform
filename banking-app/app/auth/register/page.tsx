@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { authApi } from '@/utils/api';
+import { useUser } from '@/context/UserContext';
 
 // Step 1: Phone Number
 const PhoneStep = () => {
@@ -179,8 +180,20 @@ const PersonalDetailsStep = () => {
 // Step 4: Email Verification
 const EmailVerificationStep = () => {
   const { data, updateData, setStep } = useRegistration();
+  const [isOtpSent, setIsOtpSent] = React.useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await authApi.sendEmailVerification(data.email, data.phoneNumber);
+      toast.success('OTP sent successfully');
+      setIsOtpSent(true);
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to send OTP');
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await authApi.verifyEmail(data.email, data.emailOtp);
@@ -192,45 +205,64 @@ const EmailVerificationStep = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="email">Email Address</Label>
-        <Input
-          id="email"
-          type="email"
-          value={data.email}
-          onChange={(e) => updateData({ email: e.target.value })}
-          required
-          placeholder="Enter your email"
-        />
-      </div>
-      <div>
-        <Label htmlFor="emailOtp">Enter Email OTP</Label>
-        <Input
-          id="emailOtp"
-          type="text"
-          value={data.emailOtp}
-          onChange={(e) => updateData({ emailOtp: e.target.value })}
-          required
-          pattern="[0-9]{6}"
-          placeholder="Enter 6-digit OTP"
-        />
-      </div>
-      <Button type="submit">Verify Email</Button>
-    </form>
+    <div className="space-y-4">
+      <form onSubmit={handleSendOtp} className="space-y-4">
+        <div>
+          <Label htmlFor="email">Email Address</Label>
+          <Input
+            id="email"
+            type="email"
+            value={data.email}
+            onChange={(e) => updateData({ email: e.target.value })}
+            required
+            placeholder="Enter your email address"
+            disabled={isOtpSent}
+          />
+        </div>
+        <Button type="submit" disabled={isOtpSent}>
+          Send OTP
+        </Button>
+      </form>
+
+      {isOtpSent && (
+        <form onSubmit={handleVerifyOtp} className="space-y-4">
+          <div>
+            <Label htmlFor="emailOtp">Enter OTP</Label>
+            <Input
+              id="emailOtp"
+              type="text"
+              value={data.emailOtp}
+              onChange={(e) => updateData({ emailOtp: e.target.value })}
+              required
+              pattern="[0-9]{6}"
+              placeholder="Enter 6-digit OTP"
+            />
+          </div>
+          <Button type="submit">Verify OTP</Button>
+        </form>
+      )}
+    </div>
   );
 };
 
 // Step 5: KYC Details
 const KYCStep = () => {
   const { data, updateData } = useRegistration();
+  const { setUser } = useUser();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const result = await authApi.submitKyc(data.kycDetails);
+      const result = await authApi.submitKyc({
+        ...data.kycDetails,
+        phoneNumber: data.phoneNumber
+      });
+      
+      // Store token and user data
       localStorage.setItem('token', result.token);
+      setUser(result.user);
+      
       toast.success('KYC details submitted successfully');
       router.push('/dashboard');
     } catch (error: any) {

@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from 'sonner';
 import Header from '@/components/header';
 import { AuthProvider } from '@/app/context/auth-context';
+import { UserProvider } from '@/context/UserContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,9 +22,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <Header />
-          <main>{children}</main>
-          <Toaster position="top-right" />
+          <UserProvider>
+            <Header />
+            <main>{children}</main>
+            <Toaster position="top-right" />
+          </UserProvider>
         </AuthProvider>
       </body>
     </html>
