@@ -8,12 +8,15 @@ const transactionSchema = new mongoose.Schema({
     },
     accountId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'BankAccount',
-        required: true
+        ref: 'BankAccount'
+    },
+    walletId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Wallet'
     },
     type: {
         type: String,
-        enum: ['deposit', 'withdrawal', 'transfer', 'payment', 'bill'],
+        enum: ['deposit', 'withdrawal', 'transfer', 'payment', 'bill', 'wallet_add', 'wallet_transfer', 'qr_payment'],
         required: true
     },
     amount: {
@@ -22,7 +25,7 @@ const transactionSchema = new mongoose.Schema({
     },
     currency: {
         type: String,
-        default: 'USD',
+        default: 'INR',
         required: true
     },
     description: {
@@ -37,7 +40,8 @@ const transactionSchema = new mongoose.Schema({
     recipientDetails: {
         name: String,
         accountNumber: String,
-        bankName: String
+        bankName: String,
+        upiId: String
     },
     reference: {
         type: String,
@@ -62,6 +66,17 @@ const transactionSchema = new mongoose.Schema({
 // Index for faster queries
 transactionSchema.index({ userId: 1, createdAt: -1 });
 transactionSchema.index({ accountId: 1, createdAt: -1 });
+transactionSchema.index({ walletId: 1, createdAt: -1 });
+
+// Generate reference number before saving
+transactionSchema.pre('save', async function (next) {
+    if (!this.reference) {
+        const timestamp = Date.now().toString();
+        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        this.reference = `TXN${timestamp}${random}`;
+    }
+    next();
+});
 
 const Transaction = mongoose.model('Transaction', transactionSchema);
 

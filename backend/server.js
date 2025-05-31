@@ -8,9 +8,12 @@ const morgan = require('morgan');
 const session = require('express-session');
 
 // Import routes
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./routes/auth.routes');
 const bankAccountRoutes = require('./routes/bankAccount.routes');
 const transactionRoutes = require('./routes/transaction.routes');
+const walletRoutes = require('./routes/wallet.routes');
+const bankRoutes = require('./routes/bank.routes');
+const paymentRoutes = require('./routes/payment.routes');
 
 const app = express();
 
@@ -170,6 +173,9 @@ app.get('/api-docs', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/accounts', bankAccountRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/wallet', walletRoutes);
+app.use('/api/bank', bankRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -2,10 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const bankController = require('../controllers/bank.controller');
-const { protect, verifyPin } = require('../middleware/auth.middleware');
+const { auth, verifyPin } = require('../middleware/auth.middleware');
 
 // All bank routes are protected
-router.use(protect);
+router.use(auth);
 
 // Bank account management
 router.post('/accounts', bankController.addBankAccount);

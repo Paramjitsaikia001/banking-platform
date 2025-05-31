@@ -25,10 +25,8 @@ const auth = async (req, res, next) => {
   }
 };
 
-module.exports = auth;
-
 // Middleware to verify transaction PIN
-exports.verifyPin = async (req, res, next) => {
+const verifyPin = async (req, res, next) => {
   try {
     const { pin } = req.body;
 
@@ -56,4 +54,9 @@ exports.verifyPin = async (req, res, next) => {
       message: 'Error verifying PIN',
     });
   }
+};
+
+module.exports = {
+  auth,
+  verifyPin
 };

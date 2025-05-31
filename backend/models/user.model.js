@@ -14,6 +14,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  pin: {
+    type: String,
+    required: true,
+    select: false // Hide PIN by default
+  },
   firstName: {
     type: String,
     required: true,
@@ -106,6 +111,19 @@ userSchema.pre('save', async function (next) {
   }
 });
 
+// Hash PIN before saving
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('pin')) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.pin = await bcrypt.hash(this.pin, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Generate UPI ID before saving if not exists
 userSchema.pre('save', async function (next) {
   if (!this.upiId) {
@@ -127,6 +145,11 @@ userSchema.pre('save', async function (next) {
 // Method to compare password
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Method to verify PIN
+userSchema.methods.verifyPin = async function (candidatePin) {
+  return bcrypt.compare(candidatePin, this.pin);
 };
 
 const User = mongoose.model('User', userSchema);

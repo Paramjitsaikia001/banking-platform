@@ -72,6 +72,9 @@ exports.registerWithEmail = async (req, res) => {
 
     await user.save();
 
+    // Create wallet with 0 balance
+    const wallet = await Wallet.createWalletForUser(user._id);
+
     // Generate token
     const token = generateToken(user._id);
 
@@ -85,7 +88,7 @@ exports.registerWithEmail = async (req, res) => {
         lastName: user.lastName,
         phoneNumber: user.phoneNumber,
         upiId: user.upiId,
-        wallet: user.wallet
+        wallet: wallet
       }
     });
   } catch (error) {

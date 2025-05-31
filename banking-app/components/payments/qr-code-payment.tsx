@@ -1,92 +1,134 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { QrCode, Camera, Copy, Download, CreditCard } from "lucide-react"
-import ReactDOM from 'react-dom';
-import {QRCodeSVG} from 'qrcode.react';
-import { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useUser } from "@/context/UserContext"
+import { toast } from "sonner"
+import { QRCodeSVG } from "qrcode.react"
+import { QrReader } from "react-qr-reader"
+import PaymentConfirmation from "./payment-confirmation"
 
 export default function QRCodePayment() {
+  const { user } = useUser()
   const [amount, setAmount] = useState("")
-  const [note, setNote] = useState("")
+  const [activeTab, setActiveTab] = useState("generate")
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [paymentData, setPaymentData] = useState<{
+    amount: number
+    upiId: string
+    name: string
+  } | null>(null)
+
+  const handleGenerateQR = () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error("Please enter a valid amount")
+      return
+    }
+    // QR code will be generated automatically with the amount
+  }
+
+  const handleScan = (result: any) => {
+    if (result) {
+      try {
+        const data = JSON.parse(result.text)
+        if (data.type === "payment") {
+          setPaymentData({
+            amount: data.amount,
+            upiId: data.upiId,
+            name: data.name
+          })
+          setShowConfirmation(true)
+        } else {
+          toast.error("Invalid QR code")
+        }
+      } catch (error) {
+        toast.error("Invalid QR code")
+      }
+    }
+  }
+
+  const handleError = (error: any) => {
+    toast.error("Error accessing camera")
+    console.error(error)
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>QR Code Payments</CardTitle>
-        <CardDescription>Generate or scan QR codes for quick payments</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="generate">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="generate">Generate QR</TabsTrigger>
-            <TabsTrigger value="scan">Scan QR</TabsTrigger>
-          </TabsList>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>QR Code Payments</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="generate">Generate QR</TabsTrigger>
+              <TabsTrigger value="scan">Scan QR</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="generate" className="space-y-4 pt-4">
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="amount">Amount (Optional)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="note">Note (Optional)</Label>
-                <Input id="note" placeholder="Add a note" value={note} onChange={(e) => setNote(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="flex justify-center py-6">
-              <div className="relative bg-white p-4 rounded-lg">
-                <QrCode className="h-48 w-48 text-black" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-primary rounded-full p-2">
-                    <CreditCard className="h-6 w-6 text-primary-foreground" />
-                  </div>
+            <TabsContent value="generate">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="amount">Amount (₹)</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Enter amount"
+                  />
                 </div>
+                <Button onClick={handleGenerateQR}>Generate QR Code</Button>
+                {amount && parseFloat(amount) > 0 && (
+                  <div className="flex justify-center mt-4">
+                    <QRCodeSVG
+                      value={JSON.stringify({
+                        type: "payment",
+                        amount: parseFloat(amount),
+                        upiId: user?.upiId,
+                        name: `${user?.firstName} ${user?.lastName}`
+                      })}
+                      size={200}
+                      level="H"
+                    />
+                  </div>
+                )}
               </div>
-            </div>
+            </TabsContent>
 
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1">
-                <Copy className="mr-2 h-4 w-4" />
-                Copy
-              </Button>
-              <Button variant="outline" className="flex-1">
-                <Download className="mr-2 h-4 w-4" />
-                Save
-              </Button>
-              <Button className="flex-1">
-                <QrCode className="mr-2 h-4 w-4" />
-                Share
-              </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="scan" className="space-y-4 pt-4">
-            <div className="flex justify-center py-6 border-2 border-dashed rounded-lg">
-              <div className="text-center">
-                <Camera className="h-24 w-24 mx-auto text-muted-foreground" />
-                <p className="mt-4 text-sm text-muted-foreground">Camera access is required to scan QR codes</p>
-                <Button className="mt-4">Enable Camera</Button>
+            <TabsContent value="scan">
+              <div className="space-y-4">
+                <div className="aspect-square w-full max-w-sm mx-auto">
+                  <QrReader
+                    constraints={{ facingMode: "environment" }}
+                    onResult={handleScan}
+                    onError={handleError}
+                    className="w-full h-full"
+                  />
+                </div>
+                <p className="text-center text-sm text-muted-foreground">
+                  Position the QR code within the frame to scan
+                </p>
               </div>
-            </div>
-            <div className="text-center text-sm text-muted-foreground">
-              Point your camera at a QR code to make a payment
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {paymentData && (
+        <PaymentConfirmation
+          isOpen={showConfirmation}
+          onClose={() => {
+            setShowConfirmation(false)
+            setPaymentData(null)
+          }}
+          paymentData={paymentData}
+        />
+      )}
+    </>
   )
 }
 
