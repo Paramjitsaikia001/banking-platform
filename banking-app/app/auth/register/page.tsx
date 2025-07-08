@@ -11,77 +11,131 @@ import { toast } from 'sonner';
 import { authApi } from '@/utils/api';
 import { useUser } from '@/context/UserContext';
 
-// Step 1: Phone Number
-const PhoneStep = () => {
+// Step 1: Phone Number and Email Verification
+const PhoneEmailStep = () => {
   const { data, updateData, setStep } = useRegistration();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendPhoneOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await authApi.startRegistration(data.phoneNumber);
-      toast.success('OTP sent successfully');
-      setStep(2);
+      toast.success('Phone OTP sent successfully');
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to send OTP');
+      toast.error(error?.message || 'Failed to send phone OTP');
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="phoneNumber">Phone Number</Label>
-        <Input
-          id="phoneNumber"
-          type="tel"
-          value={data.phoneNumber}
-          onChange={(e) => updateData({ phoneNumber: e.target.value })}
-          required
-          pattern="[0-9]{10}"
-          placeholder="Enter your phone number"
-        />
-      </div>
-      <Button type="submit">Send OTP</Button>
-    </form>
-  );
-};
-
-// Step 2: Phone Verification
-const PhoneVerificationStep = () => {
-  const { data, updateData, setStep } = useRegistration();
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleVerifyPhone = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await authApi.verifyPhone(data.phoneNumber, data.phoneOtp);
       toast.success('Phone number verified');
-      setStep(3);
     } catch (error: any) {
-      toast.error(error?.message || 'Invalid OTP');
+      toast.error(error?.message || 'Invalid phone OTP');
+    }
+  };
+
+  const handleSendEmailOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await authApi.sendEmailVerification(data.email, data.phoneNumber);
+      toast.success('Email OTP sent successfully');
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to send email OTP');
+    }
+  };
+
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await authApi.verifyEmail(data.email, data.emailOtp);
+      toast.success('Email verified');
+      setStep(2);
+    } catch (error: any) {
+      toast.error(error?.message || 'Invalid email OTP');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="phoneOtp">Enter OTP</Label>
-        <Input
-          id="phoneOtp"
-          type="text"
-          value={data.phoneOtp}
-          onChange={(e) => updateData({ phoneOtp: e.target.value })}
-          required
-          pattern="[0-9]{6}"
-          placeholder="Enter 6-digit OTP"
-        />
-      </div>
-      <Button type="submit">Verify OTP</Button>
-    </form>
+    <div className="space-y-6">
+      {/* Phone Verification Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Phone Verification</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="phoneNumber">Phone Number</Label>
+            <Input
+              id="phoneNumber"
+              type="tel"
+              value={data.phoneNumber || ''}
+              onChange={(e) => updateData({ phoneNumber: e.target.value })}
+              required
+              pattern="[0-9]{10}"
+              placeholder="Enter your phone number"
+            />
+          </div>
+          <Button onClick={handleSendPhoneOtp} type="button">Send Phone OTP</Button>
+          
+          <div>
+            <Label htmlFor="phoneOtp">Phone OTP</Label>
+            <Input
+              id="phoneOtp"
+              type="text"
+              value={data.phoneOtp || ''}
+              onChange={(e) => updateData({ phoneOtp: e.target.value })}
+              required
+              pattern="[0-9]{6}"
+              placeholder="Enter 6-digit phone OTP"
+            />
+          </div>
+          <Button onClick={handleVerifyPhone} type="button">Verify Phone OTP</Button>
+        </CardContent>
+      </Card>
+
+      {/* Email Verification Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Email Verification</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+              id="email"
+              type="email"
+              value={data.email || ''}
+              onChange={(e) => updateData({ email: e.target.value })}
+              required
+              placeholder="Enter your email address"
+            />
+          </div>
+          <Button onClick={handleSendEmailOtp} type="button">Send Email OTP</Button>
+          
+          <div>
+            <Label htmlFor="emailOtp">Email OTP</Label>
+            <Input
+              id="emailOtp"
+              type="text"
+              value={data.emailOtp || ''}
+              onChange={(e) => updateData({ emailOtp: e.target.value })}
+              required
+              pattern="[0-9]{6}"
+              placeholder="Enter 6-digit email OTP"
+            />
+          </div>
+          <Button onClick={handleVerifyEmail} type="button">Verify Email OTP</Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
-// Step 3: Personal Details
+// Step 2: Personal Details
 const PersonalDetailsStep = () => {
   const { data, updateData, setStep } = useRegistration();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,17 +151,31 @@ const PersonalDetailsStep = () => {
       return;
     }
 
+    // PIN validation (4-6 digits)
+    if (!data.pin || data.pin.length < 4 || data.pin.length > 6 || !/^\d+$/.test(data.pin)) {
+      toast.error('PIN must be 4-6 digits');
+      return;
+    }
+
     try {
-      await authApi.register({
+      const response = await authApi.register({
         firstName: data.firstName,
         lastName: data.lastName,
+        email: data.email,
         dateOfBirth: data.dateOfBirth,
         password: data.password,
-        phoneNumber: data.phoneNumber
+        phoneNumber: data.phoneNumber,
+        pin: data.pin
       });
       
-      toast.success('Personal details saved');
-      setStep(4);
+      toast.success('Registration successful!');
+      
+      // Store the token and user data
+      localStorage.setItem('bankapp_token', response.token);
+      localStorage.setItem('bankapp_user', JSON.stringify(response.user));
+      
+      // Redirect to dashboard
+      router.push('/dashboard');
     } catch (error: any) {
       toast.error(error?.message || 'Registration failed');
     }
@@ -120,7 +188,7 @@ const PersonalDetailsStep = () => {
           <Label htmlFor="firstName">First Name</Label>
           <Input
             id="firstName"
-            value={data.firstName}
+            value={data.firstName || ''}
             onChange={(e) => updateData({ firstName: e.target.value })}
             required
           />
@@ -129,7 +197,7 @@ const PersonalDetailsStep = () => {
           <Label htmlFor="lastName">Last Name</Label>
           <Input
             id="lastName"
-            value={data.lastName}
+            value={data.lastName || ''}
             onChange={(e) => updateData({ lastName: e.target.value })}
             required
           />
@@ -140,7 +208,7 @@ const PersonalDetailsStep = () => {
         <Input
           id="dateOfBirth"
           type="date"
-          value={data.dateOfBirth}
+          value={data.dateOfBirth || ''}
           onChange={(e) => updateData({ dateOfBirth: e.target.value })}
           required
         />
@@ -150,7 +218,7 @@ const PersonalDetailsStep = () => {
         <Input
           id="password"
           type="password"
-          value={data.password}
+          value={data.password || ''}
           onChange={(e) => updateData({ password: e.target.value })}
           required
           minLength={8}
@@ -165,220 +233,57 @@ const PersonalDetailsStep = () => {
         <Input
           id="confirmPassword"
           type="password"
-          value={data.confirmPassword}
+          value={data.confirmPassword || ''}
           onChange={(e) => updateData({ confirmPassword: e.target.value })}
           required
           minLength={8}
           placeholder="Confirm password"
         />
       </div>
-      <Button type="submit">Continue</Button>
+      <div>
+        <Label htmlFor="pin">PIN (4-6 digits)</Label>
+        <Input
+          id="pin"
+          type="password"
+          value={data.pin || ''}
+          onChange={(e) => updateData({ pin: e.target.value })}
+          required
+          minLength={4}
+          maxLength={6}
+          pattern="[0-9]*"
+          placeholder="Enter 4-6 digit PIN"
+        />
+        <p className="text-sm text-gray-500 mt-1">
+          This PIN will be used for transactions and account access
+        </p>
+      </div>
+      <Button type="submit">Complete Registration</Button>
     </form>
   );
 };
 
-// Step 4: Email Verification
-const EmailVerificationStep = () => {
-  const { data, updateData, setStep } = useRegistration();
-  const [isOtpSent, setIsOtpSent] = React.useState(false);
-
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await authApi.sendEmailVerification(data.email, data.phoneNumber);
-      toast.success('OTP sent successfully');
-      setIsOtpSent(true);
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to send OTP');
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await authApi.verifyEmail(data.email, data.emailOtp);
-      toast.success('Email verified');
-      setStep(5);
-    } catch (error: any) {
-      toast.error(error?.message || 'Invalid OTP');
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      <form onSubmit={handleSendOtp} className="space-y-4">
-        <div>
-          <Label htmlFor="email">Email Address</Label>
-          <Input
-            id="email"
-            type="email"
-            value={data.email}
-            onChange={(e) => updateData({ email: e.target.value })}
-            required
-            placeholder="Enter your email address"
-            disabled={isOtpSent}
-          />
-        </div>
-        <Button type="submit" disabled={isOtpSent}>
-          Send OTP
-        </Button>
-      </form>
-
-      {isOtpSent && (
-        <form onSubmit={handleVerifyOtp} className="space-y-4">
-          <div>
-            <Label htmlFor="emailOtp">Enter OTP</Label>
-            <Input
-              id="emailOtp"
-              type="text"
-              value={data.emailOtp}
-              onChange={(e) => updateData({ emailOtp: e.target.value })}
-              required
-              pattern="[0-9]{6}"
-              placeholder="Enter 6-digit OTP"
-            />
-          </div>
-          <Button type="submit">Verify OTP</Button>
-        </form>
-      )}
-    </div>
-  );
-};
-
-// Step 5: KYC Details
-const KYCStep = () => {
-  const { data, updateData } = useRegistration();
-  const { setUser } = useUser();
-  const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const result = await authApi.submitKyc({
-        ...data.kycDetails,
-        phoneNumber: data.phoneNumber
-      });
-      
-      // Store token and user data
-      localStorage.setItem('token', result.token);
-      setUser(result.user);
-      
-      toast.success('KYC details submitted successfully');
-      router.push('/dashboard');
-    } catch (error: any) {
-      toast.error(error?.message || 'KYC submission failed');
-    }
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'panCardImage' | 'aadharCardImage') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Convert file to base64
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      updateData({
-        kycDetails: {
-          ...data.kycDetails,
-          [type]: reader.result as string
-        }
-      });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="fullName">Full Name</Label>
-        <Input
-          id="fullName"
-          value={data.kycDetails.fullName}
-          onChange={(e) => updateData({
-            kycDetails: { ...data.kycDetails, fullName: e.target.value }
-          })}
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="panNumber">PAN Number</Label>
-        <Input
-          id="panNumber"
-          value={data.kycDetails.panNumber}
-          onChange={(e) => updateData({
-            kycDetails: { ...data.kycDetails, panNumber: e.target.value }
-          })}
-          required
-          pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
-          placeholder="Enter PAN number"
-        />
-      </div>
-      <div>
-        <Label htmlFor="aadharNumber">Aadhar Number</Label>
-        <Input
-          id="aadharNumber"
-          value={data.kycDetails.aadharNumber}
-          onChange={(e) => updateData({
-            kycDetails: { ...data.kycDetails, aadharNumber: e.target.value }
-          })}
-          required
-          pattern="[0-9]{12}"
-          placeholder="Enter Aadhar number"
-        />
-      </div>
-      <div>
-        <Label htmlFor="panCardImage">PAN Card Image</Label>
-        <Input
-          id="panCardImage"
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleFileUpload(e, 'panCardImage')}
-          required
-        />
-      </div>
-      <div>
-        <Label htmlFor="aadharCardImage">Aadhar Card Image</Label>
-        <Input
-          id="aadharCardImage"
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleFileUpload(e, 'aadharCardImage')}
-          required
-        />
-      </div>
-      <Button type="submit">Submit KYC</Button>
-    </form>
-  );
-};
-
-// Main Registration Page Component
 const RegisterPageContent = () => {
   const { step } = useRegistration();
 
   const renderStep = () => {
     switch (step) {
       case 1:
-        return <PhoneStep />;
+        return <PhoneEmailStep />;
       case 2:
-        return <PhoneVerificationStep />;
-      case 3:
         return <PersonalDetailsStep />;
-      case 4:
-        return <EmailVerificationStep />;
-      case 5:
-        return <KYCStep />;
       default:
-        return null;
+        return <PhoneEmailStep />;
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] py-8">
+      <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle className="text-center">
-            Registration - Step {step} of 5
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
+          <p className="text-gray-600">
+            {step === 1 ? 'Verify your phone and email' : 'Complete your profile'}
+          </p>
         </CardHeader>
         <CardContent>
           {renderStep()}
@@ -388,7 +293,6 @@ const RegisterPageContent = () => {
   );
 };
 
-// Wrapper component with RegistrationProvider
 export default function RegisterPage() {
   return (
     <RegistrationProvider>

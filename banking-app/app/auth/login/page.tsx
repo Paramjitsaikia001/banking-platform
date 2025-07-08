@@ -13,6 +13,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
+import { authApi } from "@/utils/api"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -32,9 +34,11 @@ export default function LoginPage() {
 
     try {
       await login(email, password)
+      toast.success("Login successful!")
       router.push("/dashboard")
-    } catch (err) {
-      setError("Invalid email or password. Please try again.")
+    } catch (err: any) {
+      setError(err?.message || "Invalid email or password. Please try again.")
+      toast.error(err?.message || "Login failed")
     } finally {
       setLoading(false)
     }
@@ -46,13 +50,13 @@ export default function LoginPage() {
     setError("")
 
     try {
-      // In a real app, this would call an API to send OTP
-      setTimeout(() => {
-        setOtpSent(true)
-        setLoading(false)
-      }, 1500)
-    } catch (err) {
-      setError("Failed to send OTP. Please try again.")
+      await authApi.startRegistration(phone)
+      setOtpSent(true)
+      toast.success("OTP sent successfully")
+    } catch (err: any) {
+      setError(err?.message || "Failed to send OTP. Please try again.")
+      toast.error(err?.message || "Failed to send OTP")
+    } finally {
       setLoading(false)
     }
   }
@@ -63,13 +67,18 @@ export default function LoginPage() {
     setError("")
 
     try {
-      // In a real app, this would verify OTP with an API
-      setTimeout(() => {
-        login(phone, otp, true)
-        router.push("/dashboard")
-      }, 1500)
-    } catch (err) {
-      setError("Invalid OTP. Please try again.")
+      // For phone login, we'll use the phone number as the identifier
+      // and verify the OTP, then create a session
+      await authApi.verifyPhone(phone, otp)
+      
+      // After OTP verification, we need to get user details
+      // For now, we'll redirect to dashboard
+      toast.success("Login successful!")
+      router.push("/dashboard")
+    } catch (err: any) {
+      setError(err?.message || "Invalid OTP. Please try again.")
+      toast.error(err?.message || "Invalid OTP")
+    } finally {
       setLoading(false)
     }
   }
@@ -142,7 +151,7 @@ export default function LoginPage() {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="1234567890"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     required

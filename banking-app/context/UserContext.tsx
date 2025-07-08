@@ -1,7 +1,26 @@
+/**
+ * User Context Provider
+ * 
+ * This context manages user data and authentication state across the banking application.
+ * It provides:
+ * - User profile information (name, email, phone, wallet details)
+ * - Authentication state management
+ * - Persistent user data storage in localStorage
+ * - KYC (Know Your Customer) status tracking
+ * - Wallet balance and status
+ * 
+ * The context is used throughout the app to:
+ * - Display user information in components
+ * - Check authentication status for protected routes
+ * - Manage user wallet and banking operations
+ * - Handle login/logout functionality
+ */
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// User interface defining the structure of user data
 interface User {
   id: string;
   firstName: string;
@@ -17,6 +36,7 @@ interface User {
   };
 }
 
+// Context interface defining available methods and state
 interface UserContextType {
   user: User | null;
   setUser: (user: User | null) => void;
@@ -24,12 +44,15 @@ interface UserContextType {
   logout: () => void;
 }
 
+// Create the context with undefined as default value
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+  // State management for user data and authentication
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Initialize user data from localStorage on component mount
   useEffect(() => {
     // Check for token and user data in localStorage on mount
     const token = localStorage.getItem('token');
@@ -41,6 +64,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Handle user state updates with localStorage persistence
   const handleSetUser = (newUser: User | null) => {
     setUser(newUser);
     setIsAuthenticated(!!newUser);
@@ -53,6 +77,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Logout function to clear user data and authentication
   const logout = () => {
     handleSetUser(null);
   };

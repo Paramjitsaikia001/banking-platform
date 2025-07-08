@@ -30,7 +30,8 @@ const sendSMSOTP = async (phoneNumber, otp) => {
     try {
         if (!twilioClient) {
             // Development fallback - just log the OTP
-            console.log(`[DEV] OTP for ${phoneNumber}: ${otp}`);
+            console.log(`\n🔐 [SMS OTP] Phone: ${phoneNumber} | OTP: ${otp}`);
+            console.log(`📱 [SMS OTP] Use this OTP for phone verification: ${otp}\n`);
             return true;
         }
 
@@ -51,7 +52,8 @@ const sendEmailOTP = async (email, otp) => {
     try {
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
             // Development fallback - just log the OTP
-            console.log(`[DEV] Email OTP for ${email}: ${otp}`);
+            console.log(`\n📧 [EMAIL OTP] Email: ${email} | OTP: ${otp}`);
+            console.log(`✉️ [EMAIL OTP] Use this OTP for email verification: ${otp}\n`);
             return true;
         }
 
