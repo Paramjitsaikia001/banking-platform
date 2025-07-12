@@ -3,14 +3,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowUpRight, ArrowDownRight, TrendingUp, Eye, EyeOff, Building } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, TrendingUp, Eye, EyeOff, Building, Banknote } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
 import { useWallet } from "@/app/context/wallet-context"
+import { useUser } from "@/context/UserContext"
 
 export default function WalletBalance() {
   const [showBalance, setShowBalance] = useState(true)
   const { balance } = useWallet()
+  const { getBankAccounts } = useUser()
+  const bankAccounts = getBankAccounts()
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -71,28 +74,58 @@ export default function WalletBalance() {
             </div>
           </TabsContent>
           <TabsContent value="bank" className="space-y-4 pt-4">
-            <div>
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-medium text-muted-foreground">Bank Balance</div>
-                <TrendingUp className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="text-3xl font-bold">{showBalance ? "₹0.00" : "••••••••"}</div>
-            </div>
-            <div className="rounded-lg border p-3">
-              <div className="flex items-center justify-between">
+            {bankAccounts.length === 0 ? (
+              <>
                 <div>
-                  <p className="text-sm font-medium">No Bank Account</p>
-                  <p className="text-xs text-muted-foreground">Link your bank account</p>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium text-muted-foreground">Bank Balance</div>
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="text-3xl font-bold">{showBalance ? "₹0.00" : "••••••••"}</div>
                 </div>
-                <div className="text-sm font-bold">{showBalance ? "₹0.00" : "••••••"}</div>
+                <div className="rounded-lg border p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">No Bank Account</p>
+                      <p className="text-xs text-muted-foreground">Link your bank account</p>
+                    </div>
+                    <div className="text-sm font-bold">{showBalance ? "₹0.00" : "••••••"}</div>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/bank-accounts">
+                    <Building className="mr-2 h-4 w-4" />
+                    Link Bank Account
+                  </Link>
+                </Button>
+              </>
+            ) : (
+              <div className="space-y-3">
+                {bankAccounts.map((account) => (
+                  <div key={account.id} className="rounded-lg border p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="p-2 bg-primary/10 rounded-full">
+                        <Banknote className="h-5 w-5 text-primary" />
+                      </span>
+                      <div>
+                        <div className="font-medium">{account.bankName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {account.accountHolderName} • {account.accountNumber.slice(-4)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold">
+                        {showBalance ? formatCurrency(account.balance) : "••••••••"}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {account.accountType} • IFSC: {account.ifscCode}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-            <Button variant="outline" className="w-full" asChild>
-              <Link href="/bank-accounts">
-                <Building className="mr-2 h-4 w-4" />
-                Link Bank Account
-              </Link>
-            </Button>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>

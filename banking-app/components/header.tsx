@@ -24,6 +24,7 @@ import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useAuth } from "@/app/context/auth-context"
+import { useUser } from "@/context/UserContext"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,8 +39,22 @@ export default function Header() {
   // State management for mobile menu and scroll effects
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user: authUser, logout } = useAuth()
+  const { user } = useUser()
   const [isScrolled, setIsScrolled] = useState(false)
+  const [userEmoji, setUserEmoji] = useState("👤")
+
+  // Load saved emoji from localStorage
+  useEffect(() => {
+    if (user?.id) {
+      const savedEmoji = localStorage.getItem(`user_emoji_${user.id}`)
+      if (savedEmoji) {
+        setUserEmoji(savedEmoji)
+      } else if (user.profileEmoji) {
+        setUserEmoji(user.profileEmoji)
+      }
+    }
+  }, [user?.id, user?.profileEmoji])
 
   // Handle scroll effect for header background
   useEffect(() => {
@@ -154,16 +169,16 @@ export default function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="/placeholder-user.jpg" alt={user.name} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                    <Avatar className="h-8 w-8 text-lg">
+                      <AvatarImage src="/placeholder-user.jpg" alt={`${user.firstName} ${user.lastName}`} />
+                      <AvatarFallback>{userEmoji || `${user.firstName?.[0]}${user.lastName?.[0]}`}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium">{user.firstName} {user.lastName}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
@@ -218,16 +233,16 @@ export default function Header() {
                   size="icon" 
                   className="md:hidden relative h-8 w-8 rounded-full"
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder-user.jpg" alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                  <Avatar className="h-8 w-8 text-lg">
+                    <AvatarImage src="/placeholder-user.jpg" alt={`${user.firstName} ${user.lastName}`} />
+                    <AvatarFallback>{userEmoji || `${user.firstName?.[0]}${user.lastName?.[0]}`}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{user.name}</p>
+                    <p className="font-medium">{user.firstName} {user.lastName}</p>
                     <p className="text-sm text-muted-foreground">{user.email}</p>
                   </div>
                 </div>
@@ -360,12 +375,12 @@ export default function Header() {
           {user && (
             <div className="pt-4 border-t">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/50">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder-user.jpg" alt={user.name} />
-                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                <Avatar className="h-8 w-8 text-lg">
+                  <AvatarImage src="/placeholder-user.jpg" alt={`${user.firstName} ${user.lastName}`} />
+                  <AvatarFallback>{userEmoji || `${user.firstName?.[0]}${user.lastName?.[0]}`}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <p className="font-medium text-sm">{user.name}</p>
+                  <p className="font-medium text-sm">{user.firstName} {user.lastName}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </div>

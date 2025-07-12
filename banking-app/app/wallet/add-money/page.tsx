@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/auth-context";
 import { useWallet } from "@/app/context/wallet-context";
 import { toast } from "sonner";
+import BankAccountSelector from "@/components/banks/bank-account-selector";
+import { useUser } from "@/context/UserContext";
 
 export default function AddMoneyPage() {
   const [amount, setAmount] = useState('');
@@ -30,6 +32,8 @@ export default function AddMoneyPage() {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpVerifying, setIsOtpVerifying] = useState(false);
+  const [selectedBankAccount, setSelectedBankAccount] = useState<any>(null);
+  const [showManualBankForm, setShowManualBankForm] = useState(false);
   
   // Card payment states
   const [cardNumber, setCardNumber] = useState('');
@@ -45,6 +49,7 @@ export default function AddMoneyPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { balance, updateBalance, addTransaction } = useWallet();
+  const { updateBankAccount } = useUser();
 
   const paymentMethods = [
     { value: 'wallet', label: 'Wallet', icon: <Wallet className="h-4 w-4" /> },
@@ -108,10 +113,37 @@ export default function AddMoneyPage() {
     }
   };
 
+  const handleBankAccountSelect = (account: any) => {
+    setSelectedBankAccount(account);
+    setSelectedBank(account.bankName);
+    setAccountNumber(account.accountNumber);
+    setIfscCode(account.ifscCode);
+    setAccountHolderName(account.accountHolderName);
+    setShowManualBankForm(false);
+  };
+
+  const handleManualBankEntry = () => {
+    setSelectedBankAccount(null);
+    setSelectedBank('');
+    setAccountNumber('');
+    setIfscCode('');
+    setAccountHolderName('');
+    setShowManualBankForm(true);
+  };
+
   const handleSendOtp = async () => {
-    if (!selectedBank || !accountNumber || !ifscCode || !accountHolderName) {
-      toast.error('Please fill in all bank details');
-      return;
+    if (selectedBankAccount) {
+      // Using linked bank account
+      if (!selectedBankAccount) {
+        toast.error('Please select a bank account');
+        return;
+      }
+    } else {
+      // Manual bank details
+      if (!selectedBank || !accountNumber || !ifscCode || !accountHolderName) {
+        toast.error('Please fill in all bank details');
+        return;
+      }
     }
 
     setIsOtpSent(true);
@@ -272,6 +304,14 @@ export default function AddMoneyPage() {
       const newBalance = balance + numAmount;
       updateBalance(newBalance);
       addTransaction(transaction);
+
+      // Decrease linked bank account balance if used
+      if (paymentMethod === 'bank_transfer' && selectedBankAccount) {
+        updateBankAccount(selectedBankAccount.id, {
+          balance: Math.max(0, (selectedBankAccount.balance || 0) - numAmount),
+          lastUpdated: new Date().toISOString()
+        });
+      }
 
       toast.success('Money added successfully!');
       router.push('/dashboard');
@@ -445,57 +485,100 @@ export default function AddMoneyPage() {
 
             {paymentMethod === 'bank_transfer' && (
               <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                <div className="space-y-2">
-                  <Label htmlFor="bank">Select Bank</Label>
-                  <Select value={selectedBank} onValueChange={setSelectedBank}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose your bank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {banks.map((bank) => (
-                        <SelectItem key={bank.value} value={bank.value}>
-                          <div className="flex items-center gap-2">
-                            <Banknote className="h-4 w-4" />
-                            {bank.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="accountNumber">Account Number</Label>
-                  <Input
-                    id="accountNumber"
-                    placeholder="Enter account number"
-                    value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
-                    required
+                {/* Bank Account Selector */}
+                {!showManualBankForm && (
+                  <BankAccountSelector
+                    selectedAccountId={selectedBankAccount?.id}
+                    onAccountSelect={handleBankAccountSelect}
+                    onManualEntry={handleManualBankEntry}
+                    title="Select Bank Account"
+                    description="Choose a linked bank account or enter details manually"
                   />
-                </div>
+                )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="ifscCode">IFSC Code</Label>
-                  <Input
-                    id="ifscCode"
-                    placeholder="Enter IFSC code"
-                    value={ifscCode}
-                    onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
-                    required
-                  />
-                </div>
+                {/* Manual Bank Details Form */}
+                {showManualBankForm && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Enter Bank Details</h3>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowManualBankForm(false)}
+                      >
+                        Use Linked Account
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="bank">Select Bank</Label>
+                      <Select value={selectedBank} onValueChange={setSelectedBank}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose your bank" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {banks.map((bank) => (
+                            <SelectItem key={bank.value} value={bank.value}>
+                              <div className="flex items-center gap-2">
+                                <Banknote className="h-4 w-4" />
+                                {bank.label}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="accountHolderName">Account Holder Name</Label>
-                  <Input
-                    id="accountHolderName"
-                    placeholder="Enter account holder name"
-                    value={accountHolderName}
-                    onChange={(e) => setAccountHolderName(e.target.value)}
-                    required
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="accountNumber">Account Number</Label>
+                      <Input
+                        id="accountNumber"
+                        placeholder="Enter account number"
+                        value={accountNumber}
+                        onChange={(e) => setAccountNumber(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="ifscCode">IFSC Code</Label>
+                      <Input
+                        id="ifscCode"
+                        placeholder="Enter IFSC code"
+                        value={ifscCode}
+                        onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="accountHolderName">Account Holder Name</Label>
+                      <Input
+                        id="accountHolderName"
+                        placeholder="Enter account holder name"
+                        value={accountHolderName}
+                        onChange={(e) => setAccountHolderName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Selected Bank Account Info */}
+                {selectedBankAccount && !showManualBankForm && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Banknote className="h-4 w-4 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium text-green-800">Selected Account</p>
+                        <p className="text-sm text-green-600">
+                          {selectedBankAccount.bankName} • {selectedBankAccount.accountNumber.slice(-4)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {!showOtpInput ? (
                   <Button

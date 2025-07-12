@@ -18,7 +18,6 @@ const app = express();
 
 // Middleware
 app.use(cors({
-<<<<<<< HEAD
     origin: process.env.FRONTEND_URL || 'http://localhost:3001',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -26,15 +25,7 @@ app.use(cors({
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
     preflightContinue: false,
     optionsSuccessStatus: 204
-=======
-  origin: ["http://localhost:3000", "http://localhost:3001"],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
->>>>>>> 0a0389239387798c943f936e0a113174fd67712c
+
 }));
 
 // Configure helmet for security
