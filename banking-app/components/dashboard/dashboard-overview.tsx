@@ -1,3 +1,20 @@
+/**
+ * Dashboard Overview Component
+ * 
+ * This component displays the main dashboard view for authenticated users.
+ * It provides:
+ * - Current wallet balance display
+ * - Quick action buttons for common banking operations
+ * - Recent transaction history
+ * - Navigation to different banking features
+ * 
+ * The dashboard serves as the central hub for users to:
+ * - Monitor their financial status
+ * - Access common banking functions
+ * - View recent activity
+ * - Navigate to other banking features
+ */
+
 "use client"
 
 import { useUser } from "@/context/UserContext"
@@ -7,9 +24,11 @@ import { ArrowUpRight, ArrowDownLeft, Wallet, CreditCard, Send, QrCode } from "l
 import { useRouter } from "next/navigation"
 
 export default function DashboardOverview() {
+  // Get current user data and router for navigation
   const { user } = useUser()
   const router = useRouter()
 
+  // Quick action buttons for common banking operations
   const quickActions = [
     {
       title: "Add Money",

@@ -8,6 +8,7 @@ interface RegistrationData {
   firstName: string;
   lastName: string;
   dateOfBirth: string;
+  pin: string;
   phoneOtp: string;
   emailOtp: string;
   kycDetails: {
@@ -35,6 +36,7 @@ const initialState: RegistrationData = {
   firstName: '',
   lastName: '',
   dateOfBirth: '',
+  pin: '',
   phoneOtp: '',
   emailOtp: '',
   kycDetails: {

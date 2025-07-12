@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -9,98 +9,134 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ArrowUpRight, ArrowDownRight, Search, Filter, Download } from "lucide-react"
+import { walletApi } from "@/utils/api"
+import { toast } from "sonner"
+
+interface Transaction {
+  _id: string
+  type: string
+  amount: number
+  description: string
+  status: string
+  createdAt: string
+  paymentMethod?: string
+}
 
 export default function TransactionHistory() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const transactions = [
-    {
-      id: "1",
-      name: "Grocery Store",
-      date: "Today, 2:34 PM",
-      amount: "-$65.75",
-      status: "completed",
-      type: "expense",
-      category: "Shopping",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "2",
-      name: "Salary Deposit",
-      date: "Yesterday, 9:00 AM",
-      amount: "+$3,000.00",
-      status: "completed",
-      type: "income",
-      category: "Income",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "3",
-      name: "Coffee Shop",
-      date: "Yesterday, 11:45 AM",
-      amount: "-$4.50",
-      status: "completed",
-      type: "expense",
-      category: "Food & Drink",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "4",
-      name: "Electric Bill",
-      date: "May 10, 2023",
-      amount: "-$85.20",
-      status: "completed",
-      type: "expense",
-      category: "Utilities",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "5",
-      name: "Freelance Payment",
-      date: "May 8, 2023",
-      amount: "+$750.00",
-      status: "completed",
-      type: "income",
-      category: "Income",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "6",
-      name: "Gas Station",
-      date: "May 7, 2023",
-      amount: "-$45.30",
-      status: "completed",
-      type: "expense",
-      category: "Transportation",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "7",
-      name: "Online Shopping",
-      date: "May 5, 2023",
-      amount: "-$129.99",
-      status: "completed",
-      type: "expense",
-      category: "Shopping",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "8",
-      name: "Dividend Payment",
-      date: "May 1, 2023",
-      amount: "+$32.50",
-      status: "completed",
-      type: "income",
-      category: "Investment",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-  ]
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await walletApi.getTransactions()
+        setTransactions(response || [])
+      } catch (error: any) {
+        console.error("Failed to fetch transactions:", error)
+        toast.error("Failed to load transaction history")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTransactions()
+  }, [])
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2
+    }).format(amount)
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = Math.abs(now.getTime() - date.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 1) {
+      return "Today, " + date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      })
+    } else if (diffDays === 2) {
+      return "Yesterday, " + date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      })
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      })
+    }
+  }
+
+  const getTransactionType = (transaction: Transaction) => {
+    if (transaction.type === 'wallet_add') return 'income'
+    if (transaction.type === 'wallet_transfer' && transaction.amount > 0) return 'income'
+    return 'expense'
+  }
+
+  const getTransactionCategory = (transaction: Transaction) => {
+    switch (transaction.type) {
+      case 'wallet_add':
+        return 'Wallet Add'
+      case 'wallet_transfer':
+        return transaction.amount > 0 ? 'Received' : 'Sent'
+      default:
+        return 'Transaction'
+    }
+  }
+
+  const getTransactionName = (transaction: Transaction) => {
+    switch (transaction.type) {
+      case 'wallet_add':
+        return `Added via ${transaction.paymentMethod || 'Payment'}`
+      case 'wallet_transfer':
+        return transaction.amount > 0 ? 'Money Received' : 'Money Sent'
+      default:
+        return transaction.description || 'Transaction'
+    }
+  }
+
+
 
   const filteredTransactions = transactions.filter(
     (transaction) =>
-      transaction.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.category.toLowerCase().includes(searchTerm.toLowerCase()),
+      getTransactionName(transaction).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getTransactionCategory(transaction).toLowerCase().includes(searchTerm.toLowerCase()),
   )
+
+  const incomeTransactions = filteredTransactions.filter(
+    (transaction) => getTransactionType(transaction) === 'income'
+  )
+
+  const expenseTransactions = filteredTransactions.filter(
+    (transaction) => getTransactionType(transaction) === 'expense'
+  )
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaction History</CardTitle>
+          <CardDescription>Loading transactions...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>
@@ -155,109 +191,138 @@ export default function TransactionHistory() {
 
           <TabsContent value="all" className="space-y-4">
             {filteredTransactions.length > 0 ? (
-              filteredTransactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between space-x-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage src={transaction.avatar || "/placeholder.svg"} alt={transaction.name} />
-                      <AvatarFallback>{transaction.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium leading-none">{transaction.name}</p>
-                      <p className="text-sm text-muted-foreground">{transaction.date}</p>
+              filteredTransactions.map((transaction) => {
+                const type = getTransactionType(transaction)
+                const amount = Math.abs(transaction.amount)
+                const formattedAmount = type === 'income' ? `+${formatCurrency(amount)}` : `-${formatCurrency(amount)}`
+                
+                return (
+                  <div
+                    key={transaction._id}
+                    className="flex items-center justify-between space-x-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Avatar>
+                        <AvatarFallback>{getTransactionName(transaction).charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium leading-none">{getTransactionName(transaction)}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(transaction.createdAt)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant={type === "income" ? "outline" : "secondary"} className="capitalize">
+                        {getTransactionCategory(transaction)}
+                      </Badge>
+                      <div className="flex items-center">
+                        {type === "income" ? (
+                          <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
+                        ) : (
+                          <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
+                        )}
+                        <span className={`font-medium ${type === "income" ? "text-green-500" : "text-red-500"}`}>
+                          {formattedAmount}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant={transaction.type === "income" ? "outline" : "secondary"} className="capitalize">
-                      {transaction.category}
-                    </Badge>
-                    <div className="flex items-center">
-                      {transaction.type === "income" ? (
-                        <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
-                      ) : (
-                        <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
-                      )}
-                      <span className={`font-medium ${transaction.type === "income" ? "text-green-500" : ""}`}>
-                        {transaction.amount}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))
+                )
+              })
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Search className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium">No transactions found</h3>
                 <p className="text-sm text-muted-foreground">
-                  Try adjusting your search or filter to find what you're looking for.
+                  {searchTerm ? "Try adjusting your search to find what you're looking for." : "Start by adding money to your wallet to see transactions here."}
                 </p>
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="income" className="space-y-4">
-            {filteredTransactions
-              .filter((transaction) => transaction.type === "income")
-              .map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between space-x-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage src={transaction.avatar || "/placeholder.svg"} alt={transaction.name} />
-                      <AvatarFallback>{transaction.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium leading-none">{transaction.name}</p>
-                      <p className="text-sm text-muted-foreground">{transaction.date}</p>
+            {incomeTransactions.length > 0 ? (
+              incomeTransactions.map((transaction) => {
+                const amount = Math.abs(transaction.amount)
+                const formattedAmount = `+${formatCurrency(amount)}`
+                
+                return (
+                  <div
+                    key={transaction._id}
+                    className="flex items-center justify-between space-x-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Avatar>
+                        <AvatarFallback>{getTransactionName(transaction).charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium leading-none">{getTransactionName(transaction)}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(transaction.createdAt)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline" className="capitalize">
+                        {getTransactionCategory(transaction)}
+                      </Badge>
+                      <div className="flex items-center">
+                        <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
+                        <span className="font-medium text-green-500">{formattedAmount}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="capitalize">
-                      {transaction.category}
-                    </Badge>
-                    <div className="flex items-center">
-                      <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
-                      <span className="font-medium text-green-500">{transaction.amount}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                )
+              })
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <ArrowUpRight className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium">No income transactions</h3>
+                <p className="text-sm text-muted-foreground">
+                  Add money to your wallet to see income transactions here.
+                </p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="expense" className="space-y-4">
-            {filteredTransactions
-              .filter((transaction) => transaction.type === "expense")
-              .map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between space-x-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Avatar>
-                      <AvatarImage src={transaction.avatar || "/placeholder.svg"} alt={transaction.name} />
-                      <AvatarFallback>{transaction.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium leading-none">{transaction.name}</p>
-                      <p className="text-sm text-muted-foreground">{transaction.date}</p>
+            {expenseTransactions.length > 0 ? (
+              expenseTransactions.map((transaction) => {
+                const amount = Math.abs(transaction.amount)
+                const formattedAmount = `-${formatCurrency(amount)}`
+                
+                return (
+                  <div
+                    key={transaction._id}
+                    className="flex items-center justify-between space-x-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Avatar>
+                        <AvatarFallback>{getTransactionName(transaction).charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium leading-none">{getTransactionName(transaction)}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(transaction.createdAt)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="secondary" className="capitalize">
+                        {getTransactionCategory(transaction)}
+                      </Badge>
+                      <div className="flex items-center">
+                        <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
+                        <span className="font-medium text-red-500">{formattedAmount}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="secondary" className="capitalize">
-                      {transaction.category}
-                    </Badge>
-                    <div className="flex items-center">
-                      <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
-                      <span className="font-medium">{transaction.amount}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                )
+              })
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <ArrowDownRight className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium">No expense transactions</h3>
+                <p className="text-sm text-muted-foreground">
+                  Send money or make payments to see expense transactions here.
+                </p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>

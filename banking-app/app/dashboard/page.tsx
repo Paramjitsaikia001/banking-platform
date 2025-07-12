@@ -1,3 +1,5 @@
+'use client';
+
 import { Suspense } from "react"
 import { Loader2 } from "lucide-react"
 import DashboardLayout from "@/components/dashboard/dashboard-layout"
@@ -5,8 +7,20 @@ import WalletOverview from "@/components/dashboard/wallet-overview"
 import RecentTransactions from "@/components/dashboard/recent-transactions"
 import QuickActions from "@/components/dashboard/quick-actions"
 import UpcomingBills from "@/components/dashboard/upcoming-bills"
+import { useAuth } from "@/app/context/auth-context";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/");
+    }
+  }, [user, router]);
+
   return (
     <DashboardLayout>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
