@@ -6,6 +6,46 @@ const Transaction = require('../models/transaction.model');
 const User = require('../models/user.model');
 const Notification = require('../models/notification.model'); // Added Notification model
 
+// Process card payment
+router.post('/card-payment', auth, async (req, res) => {
+    try {
+        const { cardNumber, cardType, amount } = req.body;
+
+        if (!cardNumber || !cardType || !amount) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+
+        // Find user's wallet
+        const wallet = await Wallet.findOne({ userId: req.user._id });
+        if (!wallet) {
+            return res.status(404).json({ message: 'Wallet not found' });
+        }
+
+        // In a real application, you would validate the card and process payment
+        // For now, we'll just create a transaction record
+        const transaction = await Transaction.create({
+            userId: req.user._id,
+            walletId: wallet._id,
+            type: 'card_payment',
+            amount: -amount,
+            description: `Card payment - ${cardType} ending in ${cardNumber.slice(-4)}`,
+            status: 'completed',
+            paymentDetails: {
+                cardType,
+                cardNumber: cardNumber.slice(-4), // Only store last 4 digits
+                amount
+            }
+        });
+
+        res.json({
+            message: 'Card payment processed successfully',
+            transaction
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error processing card payment', error: error.message });
+    }
+});
+
 // Process QR code payment
 router.post('/qr', auth, verifyPin, async (req, res) => { // Added verifyPin middleware
     try {

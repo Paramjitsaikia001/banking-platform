@@ -85,7 +85,7 @@ export default function TransferFunds() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Transfer Funds</CardTitle>
+        <CardTitle>Transfer Money</CardTitle>
         <CardDescription>Move money between your wallet and bank accounts</CardDescription>
       </CardHeader>
       <CardContent>

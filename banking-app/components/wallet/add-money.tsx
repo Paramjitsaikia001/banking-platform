@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { toast } from "sonner"
 import { useUser } from "@/context/UserContext"
+import { useWallet } from "@/app/context/wallet-context"
 
 export default function AddMoney() {
   const { user } = useUser()
+  const { updateBalance, addTransaction } = useWallet()
   const [amount, setAmount] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [isProcessing, setIsProcessing] = useState(false)
@@ -21,10 +23,27 @@ export default function AddMoney() {
       return
     }
 
+    const numAmount = parseFloat(amount)
     setIsProcessing(true)
     try {
-      // Here you would typically make an API call to process the payment
+      // Mock API call - in real app this would call the backend
       await new Promise((resolve) => setTimeout(resolve, 1500)) // Simulate API call
+      
+      // Create transaction record
+      const transaction = {
+        id: Date.now(),
+        type: 'wallet_add',
+        amount: numAmount,
+        description: `Added money via ${paymentMethod}`,
+        status: 'completed',
+        createdAt: new Date().toISOString()
+      };
+
+      // Update balance using shared context
+      const currentBalance = parseFloat(localStorage.getItem('walletBalance') || '1000');
+      const newBalance = currentBalance + numAmount;
+      updateBalance(newBalance);
+      addTransaction(transaction);
       
       toast.success("Money added successfully!")
       setAmount("")

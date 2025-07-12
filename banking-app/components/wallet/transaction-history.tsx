@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -9,39 +9,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ArrowUpRight, ArrowDownRight, Search, Filter, Download } from "lucide-react"
-import { walletApi } from "@/utils/api"
-import { toast } from "sonner"
+import { useWallet } from "@/app/context/wallet-context"
 
 interface Transaction {
-  _id: string
-  type: string
-  amount: number
-  description: string
-  status: string
-  createdAt: string
-  paymentMethod?: string
+  id: string | number;
+  type: string;
+  amount: number;
+  description: string;
+  status: string;
+  createdAt: string;
 }
 
 export default function TransactionHistory() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        const response = await walletApi.getTransactions()
-        setTransactions(response || [])
-      } catch (error: any) {
-        console.error("Failed to fetch transactions:", error)
-        toast.error("Failed to load transaction history")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchTransactions()
-  }, [])
+  const { transactions } = useWallet()
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -81,6 +62,8 @@ export default function TransactionHistory() {
   const getTransactionType = (transaction: Transaction) => {
     if (transaction.type === 'wallet_add') return 'income'
     if (transaction.type === 'wallet_transfer' && transaction.amount > 0) return 'income'
+    if (transaction.type === 'qr_payment') return 'expense'
+    if (transaction.type === 'money_request') return 'pending'
     return 'expense'
   }
 
@@ -90,6 +73,10 @@ export default function TransactionHistory() {
         return 'Wallet Add'
       case 'wallet_transfer':
         return transaction.amount > 0 ? 'Received' : 'Sent'
+      case 'qr_payment':
+        return 'QR Payment'
+      case 'money_request':
+        return 'Money Request'
       default:
         return 'Transaction'
     }
@@ -98,15 +85,17 @@ export default function TransactionHistory() {
   const getTransactionName = (transaction: Transaction) => {
     switch (transaction.type) {
       case 'wallet_add':
-        return `Added via ${transaction.paymentMethod || 'Payment'}`
+        return transaction.description || 'Added Money'
       case 'wallet_transfer':
-        return transaction.amount > 0 ? 'Money Received' : 'Money Sent'
+        return transaction.description || (transaction.amount > 0 ? 'Money Received' : 'Money Sent')
+      case 'qr_payment':
+        return transaction.description || 'QR Payment'
+      case 'money_request':
+        return transaction.description || 'Money Request'
       default:
         return transaction.description || 'Transaction'
     }
   }
-
-
 
   const filteredTransactions = transactions.filter(
     (transaction) =>
@@ -121,22 +110,6 @@ export default function TransactionHistory() {
   const expenseTransactions = filteredTransactions.filter(
     (transaction) => getTransactionType(transaction) === 'expense'
   )
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-          <CardDescription>Loading transactions...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
 
   return (
     <Card>
@@ -198,7 +171,7 @@ export default function TransactionHistory() {
                 
                 return (
                   <div
-                    key={transaction._id}
+                    key={transaction.id}
                     className="flex items-center justify-between space-x-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center space-x-4">
@@ -247,7 +220,7 @@ export default function TransactionHistory() {
                 
                 return (
                   <div
-                    key={transaction._id}
+                    key={transaction.id}
                     className="flex items-center justify-between space-x-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center space-x-4">
@@ -265,7 +238,9 @@ export default function TransactionHistory() {
                       </Badge>
                       <div className="flex items-center">
                         <ArrowUpRight className="mr-1 h-4 w-4 text-green-500" />
-                        <span className="font-medium text-green-500">{formattedAmount}</span>
+                        <span className="font-medium text-green-500">
+                          {formattedAmount}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -276,7 +251,7 @@ export default function TransactionHistory() {
                 <ArrowUpRight className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium">No income transactions</h3>
                 <p className="text-sm text-muted-foreground">
-                  Add money to your wallet to see income transactions here.
+                  {searchTerm ? "Try adjusting your search to find income transactions." : "Add money to your wallet to see income transactions here."}
                 </p>
               </div>
             )}
@@ -290,7 +265,7 @@ export default function TransactionHistory() {
                 
                 return (
                   <div
-                    key={transaction._id}
+                    key={transaction.id}
                     className="flex items-center justify-between space-x-4 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center space-x-4">
@@ -308,7 +283,9 @@ export default function TransactionHistory() {
                       </Badge>
                       <div className="flex items-center">
                         <ArrowDownRight className="mr-1 h-4 w-4 text-red-500" />
-                        <span className="font-medium text-red-500">{formattedAmount}</span>
+                        <span className="font-medium text-red-500">
+                          {formattedAmount}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -319,7 +296,7 @@ export default function TransactionHistory() {
                 <ArrowDownRight className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium">No expense transactions</h3>
                 <p className="text-sm text-muted-foreground">
-                  Send money or make payments to see expense transactions here.
+                  {searchTerm ? "Try adjusting your search to find expense transactions." : "Send money or make payments to see expense transactions here."}
                 </p>
               </div>
             )}

@@ -21,6 +21,7 @@ import Header from '@/components/header';
 import { AuthProvider } from '@/app/context/auth-context';
 import { UserProvider } from '@/context/UserContext';
 import { ThemeProvider } from '@/components/theme-provider';
+import { WalletProvider } from '@/app/context/wallet-context';
 
 // Configure Inter font for consistent typography across the app
 const inter = Inter({ subsets: ['latin'] });
@@ -49,12 +50,15 @@ export default function RootLayout({
           <AuthProvider>
             {/* UserProvider: Manages user data and preferences */}
             <UserProvider>
-              {/* Header: Navigation and user controls - appears on all pages */}
-              <Header />
-              {/* Main content area - renders page-specific content */}
-              <main>{children}</main>
-              {/* Toaster: Global notification system for user feedback */}
-              <Toaster position="top-right" />
+              {/* WalletProvider: Manages wallet balance and transactions */}
+              <WalletProvider>
+                {/* Header: Navigation and user controls - appears on all pages */}
+                <Header />
+                {/* Main content area - renders page-specific content */}
+                <main>{children}</main>
+                {/* Toaster: Global notification system for user feedback */}
+                <Toaster position="top-right" />
+              </WalletProvider>
             </UserProvider>
           </AuthProvider>
         </ThemeProvider>

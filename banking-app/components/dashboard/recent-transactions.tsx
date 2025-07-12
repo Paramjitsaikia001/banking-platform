@@ -1,63 +1,85 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ArrowUpRight, ArrowDownRight, Search, Filter } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { useWallet } from "@/app/context/wallet-context"
+
+interface Transaction {
+  id: string | number
+  name: string
+  date: string
+  amount: string
+  status: string
+  type: "income" | "expense" | "pending"
+  category: string
+  avatar?: string
+}
 
 export default function RecentTransactions() {
-  const transactions = [
-    {
-      id: "1",
-      name: "Grocery Store",
-      date: "Today, 2:34 PM",
-      amount: "-$65.75",
-      status: "completed",
-      type: "expense",
-      category: "Shopping",
+  const { transactions } = useWallet();
+
+  const formatTransactions = (): Transaction[] => {
+    if (transactions.length === 0) {
+      // Return default transactions if none exist
+      return [
+        {
+          id: "1",
+          name: "Grocery Store",
+          date: "Today, 2:34 PM",
+          amount: "-₹65.75",
+          status: "completed",
+          type: "expense",
+          category: "Shopping",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        {
+          id: "2",
+          name: "Salary Deposit",
+          date: "Yesterday, 9:00 AM",
+          amount: "+₹3,000.00",
+          status: "completed",
+          type: "income",
+          category: "Income",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+        {
+          id: "3",
+          name: "Coffee Shop",
+          date: "Yesterday, 11:45 AM",
+          amount: "-₹4.50",
+          status: "completed",
+          type: "expense",
+          category: "Food & Drink",
+          avatar: "/placeholder.svg?height=32&width=32",
+        },
+      ];
+    }
+
+    return transactions.map((tx: any) => ({
+      id: tx.id,
+      name: tx.description || 'Transaction',
+      date: new Date(tx.createdAt).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      amount: tx.type === 'money_request' ? `₹${tx.amount}` : tx.amount > 0 ? `+₹${tx.amount}` : `-₹${Math.abs(tx.amount)}`,
+      status: tx.status,
+      type: tx.type === 'money_request' ? 'pending' : tx.amount > 0 ? "income" : "expense",
+      category: tx.type === 'wallet_add' ? 'Wallet Add' : 
+               tx.type === 'wallet_transfer' ? 'Transfer' : 
+               tx.type === 'qr_payment' ? 'QR Payment' :
+               tx.type === 'money_request' ? 'Money Request' : 'Transaction',
       avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "2",
-      name: "Salary Deposit",
-      date: "Yesterday, 9:00 AM",
-      amount: "+$3,000.00",
-      status: "completed",
-      type: "income",
-      category: "Income",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "3",
-      name: "Coffee Shop",
-      date: "Yesterday, 11:45 AM",
-      amount: "-$4.50",
-      status: "completed",
-      type: "expense",
-      category: "Food & Drink",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "4",
-      name: "Electric Bill",
-      date: "May 10, 2023",
-      amount: "-$85.20",
-      status: "completed",
-      type: "expense",
-      category: "Utilities",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-    {
-      id: "5",
-      name: "Freelance Payment",
-      date: "May 8, 2023",
-      amount: "+$750.00",
-      status: "completed",
-      type: "income",
-      category: "Income",
-      avatar: "/placeholder.svg?height=32&width=32",
-    },
-  ]
+    }));
+  };
+
+  const formattedTransactions = formatTransactions();
 
   return (
     <Card>
@@ -81,7 +103,7 @@ export default function RecentTransactions() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {transactions.map((transaction) => (
+          {formattedTransactions.map((transaction) => (
             <div
               key={transaction.id}
               className="flex items-center justify-between space-x-4 rounded-lg border p-3 hover:bg-muted/50 transition-colors"

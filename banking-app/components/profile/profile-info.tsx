@@ -4,7 +4,7 @@ import { useUser } from "@/context/UserContext"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { QrReader } from '@blackbox-vision/react-qr-reader'
+// import { QrReader } from '@blackbox-vision/react-qr-reader'
 
 export default function ProfileInfo() {
   const { user } = useUser()
@@ -22,7 +22,7 @@ export default function ProfileInfo() {
         <div className="space-y-6">
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={user.profilePicture} alt={user.firstName} />
+              {/* <AvatarImage src={user.profilePicture} alt={user.firstName} /> */}
               <AvatarFallback>
                 {user.firstName[0]}
                 {user.lastName[0]}
@@ -33,9 +33,9 @@ export default function ProfileInfo() {
                 {user.firstName} {user.lastName}
               </h3>
               <p className="text-sm text-muted-foreground">{user.email}</p>
-              <div className="mt-1">
+              {/* <div className="mt-1">
                 <Badge variant="secondary">{user.role}</Badge>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -59,7 +59,7 @@ export default function ProfileInfo() {
                   <span className="font-medium">Balance:</span> ₹{user.wallet?.balance || 0}
                 </p>
                 <p className="text-sm">
-                  <span className="font-medium">UPI ID:</span> {user.upiId}
+                  {/* <span className="font-medium">UPI ID:</span> {user.upiId} */}
                 </p>
               </div>
             </div>

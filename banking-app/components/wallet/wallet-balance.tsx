@@ -4,31 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Eye, EyeOff, Building } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { walletApi } from "@/utils/api"
-import { toast } from "sonner"
+import { useWallet } from "@/app/context/wallet-context"
 
 export default function WalletBalance() {
   const [showBalance, setShowBalance] = useState(true)
-  const [balance, setBalance] = useState(0)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchBalance = async () => {
-      try {
-        const response = await walletApi.getBalance()
-        setBalance(response.balance || 0)
-      } catch (error: any) {
-        console.error("Failed to fetch balance:", error)
-        toast.error("Failed to load wallet balance")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchBalance()
-  }, [])
+  const { balance } = useWallet()
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -64,7 +46,7 @@ export default function WalletBalance() {
                 <TrendingUp className="h-4 w-4 text-green-500" />
               </div>
               <div className="text-3xl font-bold">
-                {loading ? "Loading..." : (showBalance ? formatCurrency(balance) : "••••••••")}
+                {showBalance ? formatCurrency(balance) : "••••••••"}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
