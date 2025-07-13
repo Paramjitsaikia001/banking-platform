@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useAuth } from "@/app/context/auth-context"
 import { useUser } from "@/context/UserContext"
+import { useRouter } from "next/navigation"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,10 +40,11 @@ export default function Header() {
   // State management for mobile menu and scroll effects
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
-  const { user: authUser, logout } = useAuth()
-  const { user } = useUser()
+  const { user: authUser, logout: authLogout } = useAuth()
+  const { user, logout: userLogout } = useUser()
   const [isScrolled, setIsScrolled] = useState(false)
   const [userEmoji, setUserEmoji] = useState("👤")
+  const router = useRouter()
 
   // Load saved emoji from localStorage
   useEffect(() => {
@@ -202,7 +204,7 @@ export default function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>
+                  <DropdownMenuItem onClick={() => { authLogout(); userLogout(); router.push("/"); }}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
@@ -266,7 +268,7 @@ export default function Header() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>
+                <DropdownMenuItem onClick={() => { authLogout(); userLogout(); router.push("/"); }}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -388,8 +390,10 @@ export default function Header() {
                 variant="ghost" 
                 className="w-full justify-start text-destructive" 
                 onClick={() => {
-                  logout();
+                  authLogout();
+                  userLogout();
                   setIsMenuOpen(false);
+                  router.push("/");
                 }}
               >
                 <LogOut className="mr-2 h-4 w-4" />

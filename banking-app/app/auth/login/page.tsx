@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useEffect ,useState} from "react"
 import Link from "next/link"
+
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/app/context/auth-context"
 import { Button } from "@/components/ui/button"
@@ -25,7 +25,14 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [otpSent, setOtpSent] = useState(false)
   const router = useRouter()
-  const { login } = useAuth()
+  const { login, user } = useAuth()
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user) {
+      router.replace("/dashboard")
+    }
+  }, [user, router])
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()

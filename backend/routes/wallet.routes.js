@@ -13,6 +13,10 @@ router.post('/initialize', auth, async (req, res) => {
         let wallet = await Wallet.findOne({ userId: req.user._id });
 
         if (!wallet) {
+            // Check for required user fields
+            if (!req.user.firstName || !req.user.lastName) {
+                return res.status(400).json({ message: 'User is missing firstName or lastName. Please update your profile.' });
+            }
             // Create new wallet for user
             wallet = await Wallet.createWalletForUser(req.user._id);
         }

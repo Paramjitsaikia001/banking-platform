@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { walletApi } from "@/utils/api"
+import { useUser } from "@/context/UserContext"
 
 // API base URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';

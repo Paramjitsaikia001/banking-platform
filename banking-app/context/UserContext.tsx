@@ -35,6 +35,7 @@ interface BankAccount {
   kycStatus: 'pending' | 'verified' | 'rejected';
   linkedAt: string;
   lastUpdated?: string;
+  transactions?: any[]; // Add transactions array
 }
 
 // User interface defining the structure of user data
@@ -78,6 +79,7 @@ interface UserContextType {
   updateBankAccount: (accountId: string, updates: Partial<BankAccount>) => void;
   removeBankAccount: (accountId: string) => void;
   getBankAccounts: () => BankAccount[];
+  addBankTransaction: (accountId: string, transaction: any) => void; // Add function
 }
 
 // Create the context with undefined as default value
@@ -156,6 +158,88 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Listen for changes in localStorage to sync with AuthContext
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const token = localStorage.getItem('bankapp_token');
+      const storedUser = localStorage.getItem('bankapp_user');
+      
+      if (!token || !storedUser) {
+        setUser(null);
+        setIsAuthenticated(false);
+        return;
+      }
+
+      try {
+        const userData = JSON.parse(storedUser);
+        const userId = userData._id || userData.id
+        const user: User = {
+          id: userId,
+          firstName: userData.firstName || userData.name?.split(' ')[0] || '',
+          lastName: userData.lastName || userData.name?.split(' ').slice(1).join(' ') || '',
+          email: userData.email,
+          phoneNumber: userData.phoneNumber || userData.phone,
+          wallet: {
+            balance: userData.wallet?.balance || 0,
+            isActive: userData.wallet?.isActive || true,
+          },
+          kycDetails: {
+            status: userData.kycDetails?.status || 'pending',
+          },
+          upiId: userData.upiId,
+          role: userData.role,
+          profilePicture: userData.profilePicture,
+          profileEmoji: userData.profileEmoji,
+          dateOfBirth: userData.dateOfBirth,
+          address: userData.address,
+          city: userData.city,
+          state: userData.state,
+          pincode: userData.pincode,
+          occupation: userData.occupation,
+          company: userData.company,
+          bio: userData.bio,
+          bankAccounts: userData.bankAccounts || [],
+        };
+
+        // Load saved emoji from localStorage if available
+        if (userId) {
+          const savedEmoji = localStorage.getItem(`user_emoji_${userId}`)
+          if (savedEmoji) {
+            user.profileEmoji = savedEmoji
+          }
+          
+          // Load saved bank accounts from localStorage
+          const savedBankAccounts = localStorage.getItem(`user_bank_accounts_${userId}`)
+          if (savedBankAccounts) {
+            try {
+              user.bankAccounts = JSON.parse(savedBankAccounts)
+            } catch (error) {
+              console.error('Error parsing saved bank accounts:', error)
+              user.bankAccounts = []
+            }
+          }
+        }
+        setUser(user);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    };
+
+    // Listen for storage events (when localStorage changes in other tabs/windows)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check for changes periodically (for same-tab updates)
+    const interval = setInterval(handleStorageChange, 1000);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
   // Handle user state updates with localStorage persistence
   const handleSetUser = (newUser: User | null) => {
     setUser(newUser);
@@ -218,6 +302,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Add bank transaction to a specific bank account
+  const addBankTransaction = (accountId: string, transaction: any) => {
+    if (user && user.bankAccounts) {
+      const updatedAccounts = user.bankAccounts.map(account => {
+        if (account.id === accountId) {
+          const updatedTransactions = [transaction, ...(account.transactions || [])].slice(0, 10);
+          return { ...account, transactions: updatedTransactions };
+        }
+        return account;
+      });
+      const updatedUser = { ...user, bankAccounts: updatedAccounts };
+      setUser(updatedUser);
+      // Save to localStorage
+      localStorage.setItem('bankapp_user', JSON.stringify(updatedUser));
+      if (user.id) {
+        localStorage.setItem(`user_bank_accounts_${user.id}`, JSON.stringify(updatedAccounts));
+      }
+    }
+  };
+
   // Get bank accounts
   const getBankAccounts = (): BankAccount[] => {
     return user?.bankAccounts || [];
@@ -240,7 +344,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       addBankAccount,
       updateBankAccount,
       removeBankAccount,
-      getBankAccounts
+      getBankAccounts,
+      addBankTransaction // Provide function
     }}>
       {children}
     </UserContext.Provider>
