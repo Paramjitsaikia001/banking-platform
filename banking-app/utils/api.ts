@@ -51,7 +51,7 @@ async function api(endpoint: string, options: ApiOptions = {}) {
     // Handle API errors consistently
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'API request failed');
+        throw error;
     }
 
     return response.json();

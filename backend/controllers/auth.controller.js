@@ -170,6 +170,13 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Ensure wallet exists
+    const Wallet = require('../models/wallet.model');
+    let wallet = await Wallet.findOne({ userId: user._id });
+    if (!wallet) {
+      wallet = await Wallet.createWalletForUser(user._id);
+    }
+
     // Generate token
     const token = generateToken(user._id);
 

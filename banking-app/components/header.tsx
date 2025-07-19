@@ -141,10 +141,10 @@ export default function Header() {
                 Wallet
               </Link>
               <Link
-                href="/payments"
-                className={`text-sm font-medium hover:underline underline-offset-4 ${pathname === "/payments" ? "text-primary" : ""}`}
+                href="/bank-accounts"
+                className={`text-sm font-medium hover:underline underline-offset-4 ${pathname === "/bank-accounts" ? "text-primary" : ""}`}
               >
-                Payments
+                Bank Accounts
               </Link>
               <Link
                 href="/bills"
@@ -333,13 +333,6 @@ export default function Header() {
               onClick={() => setIsMenuOpen(false)}
             >
               Wallet
-            </Link>
-            <Link 
-              href="/payments" 
-              className="text-base font-medium py-2 px-4 rounded hover:bg-accent" 
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Payments
             </Link>
             <Link 
               href="/bills" 

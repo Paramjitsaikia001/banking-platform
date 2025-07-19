@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/dashboard/dashboard-layout"
 import ProfileInfo from "@/components/profile/profile-info"
 import SecuritySettings from "@/components/profile/security-settings"
 import NotificationPreferences from "@/components/profile/notification-preferences"
+import UserQRCode from "@/components/profile/user-qr-code"
 
 export default function ProfilePage() {
   return (
@@ -28,7 +29,10 @@ export default function ProfilePage() {
           <SecuritySettings />
         </Suspense>
       </div>
-      
+      {/* Add QR code below profile info and security settings */}
+      <div className="mt-6">
+        <UserQRCode />
+      </div>
       <div className="mt-6">
         <Suspense
           fallback={

@@ -103,19 +103,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const userId = userData._id || userData.id
         const user: User = {
           id: userId,
-          firstName: userData.firstName || userData.name?.split(' ')[0] || '',
-          lastName: userData.lastName || userData.name?.split(' ').slice(1).join(' ') || '',
+          firstName: userData.firstName || (userData.name ? userData.name.split(' ')[0] : ''),
+          lastName: userData.lastName || (userData.name ? userData.name.split(' ').slice(1).join(' ') : ''),
           email: userData.email,
           phoneNumber: userData.phoneNumber || userData.phone,
-          wallet: {
-            balance: userData.wallet?.balance || 0,
-            isActive: userData.wallet?.isActive || true,
-          },
-          kycDetails: {
-            status: userData.kycDetails?.status || 'pending',
-          },
+          wallet: userData.wallet || { balance: 0, isActive: true },
+          kycDetails: userData.kycDetails || { status: 'pending' },
           upiId: userData.upiId,
-          role: userData.role,
+          role: userData.role || 'user',
           profilePicture: userData.profilePicture,
           profileEmoji: userData.profileEmoji,
           dateOfBirth: userData.dateOfBirth,
@@ -175,19 +170,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const userId = userData._id || userData.id
         const user: User = {
           id: userId,
-          firstName: userData.firstName || userData.name?.split(' ')[0] || '',
-          lastName: userData.lastName || userData.name?.split(' ').slice(1).join(' ') || '',
+          firstName: userData.firstName || (userData.name ? userData.name.split(' ')[0] : ''),
+          lastName: userData.lastName || (userData.name ? userData.name.split(' ').slice(1).join(' ') : ''),
           email: userData.email,
           phoneNumber: userData.phoneNumber || userData.phone,
-          wallet: {
-            balance: userData.wallet?.balance || 0,
-            isActive: userData.wallet?.isActive || true,
-          },
-          kycDetails: {
-            status: userData.kycDetails?.status || 'pending',
-          },
+          wallet: userData.wallet || { balance: 0, isActive: true },
+          kycDetails: userData.kycDetails || { status: 'pending' },
           upiId: userData.upiId,
-          role: userData.role,
+          role: userData.role || 'user',
           profilePicture: userData.profilePicture,
           profileEmoji: userData.profileEmoji,
           dateOfBirth: userData.dateOfBirth,

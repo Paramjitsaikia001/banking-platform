@@ -27,7 +27,7 @@ router.post('/initialize', auth, async (req, res) => {
             upiId: wallet.upiId
         });
     } catch (error) {
-        res.status(500).json({ message: 'Error initializing wallet', error: error.message });
+        res.status(500).json({ message: error.message || 'Error initializing wallet' });
     }
 });
 
