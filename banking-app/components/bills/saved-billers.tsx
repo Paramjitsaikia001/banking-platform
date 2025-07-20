@@ -11,7 +11,7 @@ export default function SavedBillers() {
       category: "Electricity",
       accountId: "EL-12345678",
       dueDate: "May 25, 2023",
-      amount: "$85.20",
+      amount: "₹85.20",
       avatar: "/placeholder.svg?height=40&width=40",
     },
     {
@@ -19,7 +19,7 @@ export default function SavedBillers() {
       category: "Internet",
       accountId: "IN-87654321",
       dueDate: "May 28, 2023",
-      amount: "$59.99",
+      amount: "₹59.99",
       avatar: "/placeholder.svg?height=40&width=40",
     },
     {
@@ -27,7 +27,7 @@ export default function SavedBillers() {
       category: "Water",
       accountId: "WT-98765432",
       dueDate: "June 2, 2023",
-      amount: "$42.50",
+      amount: "₹42.50",
       avatar: "/placeholder.svg?height=40&width=40",
     },
     {
@@ -35,7 +35,7 @@ export default function SavedBillers() {
       category: "Mobile",
       accountId: "MB-56781234",
       dueDate: "June 5, 2023",
-      amount: "$35.00",
+      amount: "₹35.00",
       avatar: "/placeholder.svg?height=40&width=40",
     },
   ]

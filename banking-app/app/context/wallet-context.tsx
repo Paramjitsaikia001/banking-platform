@@ -30,18 +30,16 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const [balance, setBalance] = useState<number>(1000); // Default balance
+  const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
-  // Reset wallet state and localStorage (for new users)
+  // Reset wallet state for new users
   const resetWallet = useCallback(() => {
     setBalance(0);
     setTransactions([]);
-    localStorage.setItem("walletBalance", "0");
-    localStorage.setItem("recentTransactions", JSON.stringify([]));
   }, []);
 
-  // Load initial data from backend API after login/registration
+  // Load wallet data from backend for the current user
   useEffect(() => {
     async function fetchWalletData() {
       try {
@@ -49,48 +47,50 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           typeof window !== "undefined"
             ? localStorage.getItem("bankapp_token")
             : null;
-        if (!token) {
-          // No user logged in, reset wallet state
+        const storedUser =
+          typeof window !== "undefined"
+            ? localStorage.getItem("bankapp_user")
+            : null;
+        let userId = "";
+        if (storedUser) {
+          try {
+            const userObj = JSON.parse(storedUser);
+            userId = userObj._id || userObj.id || "";
+          } catch {}
+        }
+        if (!token || !userId) {
           setBalance(0);
           setTransactions([]);
-          localStorage.setItem("walletBalance", "0");
-          localStorage.setItem("recentTransactions", JSON.stringify([]));
           return;
         }
         const fetchOptions = { headers: { Authorization: `Bearer ${token}` } };
 
         // Fetch wallet balance
-        const balanceRes = await fetch("/api/wallet/balance", fetchOptions);
+        const balanceRes = await fetch(
+          "http://localhost:5000/api/wallet/balance",
+          fetchOptions
+        );
         if (balanceRes.ok) {
           const balanceData = await balanceRes.json();
           setBalance(balanceData.data?.balance ?? 0);
-          localStorage.setItem(
-            "walletBalance",
-            String(balanceData.data?.balance ?? 0)
-          );
         } else {
           setBalance(0);
-          localStorage.setItem("walletBalance", "0");
         }
 
         // Fetch transactions
-        const txRes = await fetch("/api/wallet/transactions", fetchOptions);
+        const txRes = await fetch(
+          "http://localhost:5000/api/transactions",
+          fetchOptions
+        );
         if (txRes.ok) {
           const txData = await txRes.json();
           setTransactions(txData.data ?? []);
-          localStorage.setItem(
-            "recentTransactions",
-            JSON.stringify(txData.data ?? [])
-          );
         } else {
           setTransactions([]);
-          localStorage.setItem("recentTransactions", JSON.stringify([]));
         }
       } catch (err) {
         setBalance(0);
         setTransactions([]);
-        localStorage.setItem("walletBalance", "0");
-        localStorage.setItem("recentTransactions", JSON.stringify([]));
       }
     }
     fetchWalletData();
@@ -98,31 +98,18 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const updateBalance = useCallback((newBalance: number) => {
     setBalance(newBalance);
-    localStorage.setItem("walletBalance", newBalance.toString());
   }, []);
 
   const addTransaction = useCallback((transaction: Transaction) => {
     setTransactions((prevTransactions) => {
       const newTransactions = [transaction, ...prevTransactions].slice(0, 10); // Keep only 10 most recent
-      localStorage.setItem(
-        "recentTransactions",
-        JSON.stringify(newTransactions)
-      );
       return newTransactions;
     });
   }, []);
 
   const refreshData = useCallback(() => {
-    const storedBalance = localStorage.getItem("walletBalance");
-    const storedTransactions = localStorage.getItem("recentTransactions");
-
-    if (storedBalance) {
-      setBalance(parseFloat(storedBalance));
-    }
-
-    if (storedTransactions) {
-      setTransactions(JSON.parse(storedTransactions));
-    }
+    // Always fetch from backend for current user
+    // ...existing code...
   }, []);
 
   return (

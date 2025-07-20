@@ -8,7 +8,7 @@ export default function UpcomingPayments() {
   const bills = [
     {
       name: "Electricity Bill",
-      amount: "$85.20",
+      amount: "₹85.20",
       dueDate: "May 25, 2023",
       daysLeft: 5,
       progress: 80,
@@ -16,7 +16,7 @@ export default function UpcomingPayments() {
     },
     {
       name: "Internet Service",
-      amount: "$59.99",
+      amount: "₹59.99",
       dueDate: "May 28, 2023",
       daysLeft: 8,
       progress: 60,
@@ -24,7 +24,7 @@ export default function UpcomingPayments() {
     },
     {
       name: "Water Bill",
-      amount: "$42.50",
+      amount: "₹42.50",
       dueDate: "June 2, 2023",
       daysLeft: 13,
       progress: 40,
@@ -32,7 +32,7 @@ export default function UpcomingPayments() {
     },
     {
       name: "Mobile Postpaid",
-      amount: "$35.00",
+      amount: "₹35.00",
       dueDate: "June 5, 2023",
       daysLeft: 16,
       progress: 30,
@@ -40,7 +40,7 @@ export default function UpcomingPayments() {
     },
     {
       name: "Credit Card",
-      amount: "$250.00",
+      amount: "₹250.00",
       dueDate: "June 10, 2023",
       daysLeft: 21,
       progress: 20,

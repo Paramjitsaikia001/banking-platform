@@ -1,12 +1,36 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, PlusCircle, CreditCard, Building2, Smartphone, Wallet, User, Phone, Banknote, Shield, Calendar } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ArrowLeft,
+  PlusCircle,
+  CreditCard,
+  Building2,
+  Smartphone,
+  Wallet,
+  User,
+  Phone,
+  Banknote,
+  Shield,
+  Calendar,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/auth-context";
 import { useWallet } from "@/app/context/wallet-context";
@@ -15,79 +39,99 @@ import BankAccountSelector from "@/components/banks/bank-account-selector";
 import { useUser } from "@/context/UserContext";
 
 export default function AddMoneyPage() {
-  const [amount, setAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [userName, setUserName] = useState('');
+  const [amount, setAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [showUserInfo, setShowUserInfo] = useState(false);
-  
+
   // Bank transfer states
-  const [selectedBank, setSelectedBank] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [ifscCode, setIfscCode] = useState('');
-  const [accountHolderName, setAccountHolderName] = useState('');
-  const [otp, setOtp] = useState('');
+  const [selectedBank, setSelectedBank] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [ifscCode, setIfscCode] = useState("");
+  const [accountHolderName, setAccountHolderName] = useState("");
+  const [otp, setOtp] = useState("");
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpVerifying, setIsOtpVerifying] = useState(false);
   const [selectedBankAccount, setSelectedBankAccount] = useState<any>(null);
   const [showManualBankForm, setShowManualBankForm] = useState(false);
-  
+
   // Card payment states
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardHolderName, setCardHolderName] = useState('');
-  const [expiryMonth, setExpiryMonth] = useState('');
-  const [expiryYear, setExpiryYear] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [cardOtp, setCardOtp] = useState('');
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardHolderName, setCardHolderName] = useState("");
+  const [expiryMonth, setExpiryMonth] = useState("");
+  const [expiryYear, setExpiryYear] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [cardOtp, setCardOtp] = useState("");
   const [showCardOtpInput, setShowCardOtpInput] = useState(false);
   const [isCardOtpSent, setIsCardOtpSent] = useState(false);
   const [isCardOtpVerifying, setIsCardOtpVerifying] = useState(false);
-  
+
   const router = useRouter();
   const { user } = useAuth();
-  const { balance, updateBalance, addTransaction } = useWallet();
+  const { refreshData, balance, updateBalance, addTransaction } = useWallet();
   const { updateBankAccount } = useUser();
 
   const paymentMethods = [
-    { value: 'wallet', label: 'Wallet', icon: <Wallet className="h-4 w-4" /> },
-    { value: 'bank_transfer', label: 'Bank Transfer', icon: <Building2 className="h-4 w-4" /> },
-    { value: 'card_payment', label: 'Card Payment', icon: <CreditCard className="h-4 w-4" /> },
+    { value: "wallet", label: "Wallet", icon: <Wallet className="h-4 w-4" /> },
+    {
+      value: "bank_transfer",
+      label: "Bank Transfer",
+      icon: <Building2 className="h-4 w-4" />,
+    },
+    {
+      value: "card_payment",
+      label: "Card Payment",
+      icon: <CreditCard className="h-4 w-4" />,
+    },
   ];
 
   const banks = [
-    { value: 'sbi', label: 'State Bank of India (SBI)', code: 'SBIN0000001' },
-    { value: 'hdfc', label: 'HDFC Bank', code: 'HDFC0000001' },
-    { value: 'icici', label: 'ICICI Bank', code: 'ICIC0000001' },
-    { value: 'axis', label: 'Axis Bank', code: 'UTIB0000001' },
-    { value: 'kotak', label: 'Kotak Mahindra Bank', code: 'KOTK0000001' },
+    { value: "sbi", label: "State Bank of India (SBI)", code: "SBIN0000001" },
+    { value: "hdfc", label: "HDFC Bank", code: "HDFC0000001" },
+    { value: "icici", label: "ICICI Bank", code: "ICIC0000001" },
+    { value: "axis", label: "Axis Bank", code: "UTIB0000001" },
+    { value: "kotak", label: "Kotak Mahindra Bank", code: "KOTK0000001" },
   ];
 
   const months = [
-    { value: '01', label: '01' }, { value: '02', label: '02' }, { value: '03', label: '03' },
-    { value: '04', label: '04' }, { value: '05', label: '05' }, { value: '06', label: '06' },
-    { value: '07', label: '07' }, { value: '08', label: '08' }, { value: '09', label: '09' },
-    { value: '10', label: '10' }, { value: '11', label: '11' }, { value: '12', label: '12' },
+    { value: "01", label: "01" },
+    { value: "02", label: "02" },
+    { value: "03", label: "03" },
+    { value: "04", label: "04" },
+    { value: "05", label: "05" },
+    { value: "06", label: "06" },
+    { value: "07", label: "07" },
+    { value: "08", label: "08" },
+    { value: "09", label: "09" },
+    { value: "10", label: "10" },
+    { value: "11", label: "11" },
+    { value: "12", label: "12" },
   ];
 
   const years = [
-    { value: '2024', label: '2024' }, { value: '2025', label: '2025' }, { value: '2026', label: '2026' },
-    { value: '2027', label: '2027' }, { value: '2028', label: '2028' }, { value: '2029', label: '2029' },
-    { value: '2030', label: '2030' },
+    { value: "2024", label: "2024" },
+    { value: "2025", label: "2025" },
+    { value: "2026", label: "2026" },
+    { value: "2027", label: "2027" },
+    { value: "2028", label: "2028" },
+    { value: "2029", label: "2029" },
+    { value: "2030", label: "2030" },
   ];
 
   // Mock user data - in real app this would come from API
   const mockUsers = [
-    { phone: '9876543210', name: 'John Doe', walletId: 'WAL001' },
-    { phone: '9876543211', name: 'Jane Smith', walletId: 'WAL002' },
-    { phone: '9876543212', name: 'Mike Johnson', walletId: 'WAL003' },
+    { phone: "9876543210", name: "John Doe", walletId: "WAL001" },
+    { phone: "9876543211", name: "Jane Smith", walletId: "WAL002" },
+    { phone: "9876543212", name: "Mike Johnson", walletId: "WAL003" },
   ];
 
   const handlePhoneVerification = async () => {
     if (!phoneNumber) {
-      toast.error('Please enter a phone number');
+      toast.error("Please enter a phone number");
       return;
     }
 
@@ -95,19 +139,19 @@ export default function AddMoneyPage() {
 
     try {
       // Mock API call to verify phone number
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const foundUser = mockUsers.find(u => u.phone === phoneNumber);
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const foundUser = mockUsers.find((u) => u.phone === phoneNumber);
+
       if (foundUser) {
         setUserName(foundUser.name);
         setShowUserInfo(true);
-        toast.success('Phone number verified!');
+        toast.success("Phone number verified!");
       } else {
-        toast.error('Phone number not found. Please check and try again.');
+        toast.error("Phone number not found. Please check and try again.");
       }
     } catch (error) {
-      toast.error('Error verifying phone number');
+      toast.error("Error verifying phone number");
     } finally {
       setIsVerifying(false);
     }
@@ -124,10 +168,10 @@ export default function AddMoneyPage() {
 
   const handleManualBankEntry = () => {
     setSelectedBankAccount(null);
-    setSelectedBank('');
-    setAccountNumber('');
-    setIfscCode('');
-    setAccountHolderName('');
+    setSelectedBank("");
+    setAccountNumber("");
+    setIfscCode("");
+    setAccountHolderName("");
     setShowManualBankForm(true);
   };
 
@@ -135,13 +179,13 @@ export default function AddMoneyPage() {
     if (selectedBankAccount) {
       // Using linked bank account
       if (!selectedBankAccount) {
-        toast.error('Please select a bank account');
+        toast.error("Please select a bank account");
         return;
       }
     } else {
       // Manual bank details
       if (!selectedBank || !accountNumber || !ifscCode || !accountHolderName) {
-        toast.error('Please fill in all bank details');
+        toast.error("Please fill in all bank details");
         return;
       }
     }
@@ -151,16 +195,16 @@ export default function AddMoneyPage() {
 
     try {
       // Mock API call to send OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('OTP sent to your registered mobile number!');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success("OTP sent to your registered mobile number!");
     } catch (error) {
-      toast.error('Failed to send OTP');
+      toast.error("Failed to send OTP");
     }
   };
 
   const handleVerifyOtp = async () => {
     if (!otp) {
-      toast.error('Please enter OTP');
+      toast.error("Please enter OTP");
       return;
     }
 
@@ -168,20 +212,21 @@ export default function AddMoneyPage() {
 
     try {
       // Mock API call to verify OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (otp === '123456') { // Mock OTP
-        toast.success('OTP verified successfully!');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (otp === "123456") {
+        // Mock OTP
+        toast.success("OTP verified successfully!");
         setShowOtpInput(false);
         setIsOtpSent(false);
-        setOtp('');
+        setOtp("");
         // Proceed with payment
         await handleSubmit(null);
       } else {
-        toast.error('Invalid OTP. Please try again.');
+        toast.error("Invalid OTP. Please try again.");
       }
     } catch (error) {
-      toast.error('Error verifying OTP');
+      toast.error("Error verifying OTP");
     } finally {
       setIsOtpVerifying(false);
     }
@@ -189,7 +234,7 @@ export default function AddMoneyPage() {
 
   const handleSendCardOtp = async () => {
     if (!cardNumber || !cardHolderName || !expiryMonth || !expiryYear || !cvv) {
-      toast.error('Please fill in all card details');
+      toast.error("Please fill in all card details");
       return;
     }
 
@@ -198,16 +243,16 @@ export default function AddMoneyPage() {
 
     try {
       // Mock API call to send OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('OTP sent to your registered mobile number!');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success("OTP sent to your registered mobile number!");
     } catch (error) {
-      toast.error('Failed to send OTP');
+      toast.error("Failed to send OTP");
     }
   };
 
   const handleVerifyCardOtp = async () => {
     if (!cardOtp) {
-      toast.error('Please enter OTP');
+      toast.error("Please enter OTP");
       return;
     }
 
@@ -215,35 +260,36 @@ export default function AddMoneyPage() {
 
     try {
       // Mock API call to verify OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (cardOtp === '123456') { // Mock OTP
-        toast.success('OTP verified successfully!');
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (cardOtp === "123456") {
+        // Mock OTP
+        toast.success("OTP verified successfully!");
         setShowCardOtpInput(false);
         setIsCardOtpSent(false);
-        setCardOtp('');
+        setCardOtp("");
         // Proceed with payment
         await handleSubmit(null);
       } else {
-        toast.error('Invalid OTP. Please try again.');
+        toast.error("Invalid OTP. Please try again.");
       }
     } catch (error) {
-      toast.error('Error verifying OTP');
+      toast.error("Error verifying OTP");
     } finally {
       setIsCardOtpVerifying(false);
     }
   };
 
   const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
     const matches = v.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
+    const match = (matches && matches[0]) || "";
     const parts = [];
     for (let i = 0, len = match.length; i < len; i += 4) {
       parts.push(match.substring(i, i + 4));
     }
     if (parts.length) {
-      return parts.join(' ');
+      return parts.join(" ");
     } else {
       return v;
     }
@@ -251,30 +297,30 @@ export default function AddMoneyPage() {
 
   const handleSubmit = async (e?: React.FormEvent | null) => {
     if (e) e.preventDefault();
-    
+
     if (!amount || !paymentMethod) {
-      toast.error('Please fill in all fields');
+      toast.error("Please fill in all fields");
       return;
     }
 
-    if (paymentMethod === 'wallet' && !phoneNumber) {
-      toast.error('Please enter phone number for wallet payment');
+    if (paymentMethod === "wallet" && !phoneNumber) {
+      toast.error("Please enter phone number for wallet payment");
       return;
     }
 
-    if (paymentMethod === 'bank_transfer' && !selectedBank) {
-      toast.error('Please complete bank transfer details');
+    if (paymentMethod === "bank_transfer" && !selectedBank) {
+      toast.error("Please complete bank transfer details");
       return;
     }
 
-    if (paymentMethod === 'card_payment' && !cardNumber) {
-      toast.error('Please complete card payment details');
+    if (paymentMethod === "card_payment" && !cardNumber) {
+      toast.error("Please complete card payment details");
       return;
     }
 
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
-      toast.error('Please enter a valid amount');
+      toast.error("Please enter a valid amount");
       return;
     }
 
@@ -282,22 +328,23 @@ export default function AddMoneyPage() {
 
     try {
       // Mock API call - in real app this would call the backend
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API delay
+
       // Create transaction record
       const transaction = {
         id: Date.now(),
-        type: 'wallet_add',
+        type: "wallet_add",
         amount: numAmount,
-        description: paymentMethod === 'wallet' 
-          ? `Added money via wallet (${userName})` 
-          : paymentMethod === 'bank_transfer'
-          ? `Added money via bank transfer (${selectedBank})`
-          : paymentMethod === 'card_payment'
-          ? `Added money via card payment (${cardNumber.slice(-4)})`
-          : `Added money via ${paymentMethod}`,
-        status: 'completed',
-        createdAt: new Date().toISOString()
+        description:
+          paymentMethod === "wallet"
+            ? `Added money via wallet (${userName})`
+            : paymentMethod === "bank_transfer"
+            ? `Added money via bank transfer (${selectedBank})`
+            : paymentMethod === "card_payment"
+            ? `Added money via card payment (${cardNumber.slice(-4)})`
+            : `Added money via ${paymentMethod}`,
+        status: "completed",
+        createdAt: new Date().toISOString(),
       };
 
       // Update balance using shared context
@@ -306,41 +353,45 @@ export default function AddMoneyPage() {
       addTransaction(transaction);
 
       // Decrease linked bank account balance if used
-      if (paymentMethod === 'bank_transfer' && selectedBankAccount) {
+      if (paymentMethod === "bank_transfer" && selectedBankAccount) {
         updateBankAccount(selectedBankAccount.id, {
           balance: Math.max(0, (selectedBankAccount.balance || 0) - numAmount),
-          lastUpdated: new Date().toISOString()
+          lastUpdated: new Date().toISOString(),
         });
       }
 
-      toast.success('Money added successfully!');
-      router.push('/dashboard');
+      toast.success("Money added successfully!");
+      router.push("/dashboard");
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
+      // Refresh wallet data from backend to ensure per-user persistence
+      if (typeof refreshData === "function") {
+        await refreshData();
+      }
     }
   };
 
   const resetForm = () => {
-    setAmount('');
-    setPaymentMethod('');
-    setPhoneNumber('');
-    setUserName('');
+    setAmount("");
+    setPaymentMethod("");
+    setPhoneNumber("");
+    setUserName("");
     setShowUserInfo(false);
-    setSelectedBank('');
-    setAccountNumber('');
-    setIfscCode('');
-    setAccountHolderName('');
-    setOtp('');
+    setSelectedBank("");
+    setAccountNumber("");
+    setIfscCode("");
+    setAccountHolderName("");
+    setOtp("");
     setShowOtpInput(false);
     setIsOtpSent(false);
-    setCardNumber('');
-    setCardHolderName('');
-    setExpiryMonth('');
-    setExpiryYear('');
-    setCvv('');
-    setCardOtp('');
+    setCardNumber("");
+    setCardHolderName("");
+    setExpiryMonth("");
+    setExpiryYear("");
+    setCvv("");
+    setCardOtp("");
     setShowCardOtpInput(false);
     setIsCardOtpSent(false);
   };
@@ -348,11 +399,7 @@ export default function AddMoneyPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-md">
       <div className="mb-6">
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
@@ -388,33 +435,36 @@ export default function AddMoneyPage() {
 
             <div className="space-y-2">
               <Label htmlFor="paymentMethod">Payment Method</Label>
-              <Select value={paymentMethod} onValueChange={(value) => {
-                setPaymentMethod(value);
-                if (value !== 'wallet') {
-                  setPhoneNumber('');
-                  setUserName('');
-                  setShowUserInfo(false);
-                }
-                if (value !== 'bank_transfer') {
-                  setSelectedBank('');
-                  setAccountNumber('');
-                  setIfscCode('');
-                  setAccountHolderName('');
-                  setOtp('');
-                  setShowOtpInput(false);
-                  setIsOtpSent(false);
-                }
-                if (value !== 'card_payment') {
-                  setCardNumber('');
-                  setCardHolderName('');
-                  setExpiryMonth('');
-                  setExpiryYear('');
-                  setCvv('');
-                  setCardOtp('');
-                  setShowCardOtpInput(false);
-                  setIsCardOtpSent(false);
-                }
-              }}>
+              <Select
+                value={paymentMethod}
+                onValueChange={(value) => {
+                  setPaymentMethod(value);
+                  if (value !== "wallet") {
+                    setPhoneNumber("");
+                    setUserName("");
+                    setShowUserInfo(false);
+                  }
+                  if (value !== "bank_transfer") {
+                    setSelectedBank("");
+                    setAccountNumber("");
+                    setIfscCode("");
+                    setAccountHolderName("");
+                    setOtp("");
+                    setShowOtpInput(false);
+                    setIsOtpSent(false);
+                  }
+                  if (value !== "card_payment") {
+                    setCardNumber("");
+                    setCardHolderName("");
+                    setExpiryMonth("");
+                    setExpiryYear("");
+                    setCvv("");
+                    setCardOtp("");
+                    setShowCardOtpInput(false);
+                    setIsCardOtpSent(false);
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
@@ -431,7 +481,7 @@ export default function AddMoneyPage() {
               </Select>
             </div>
 
-            {paymentMethod === 'wallet' && (
+            {paymentMethod === "wallet" && (
               <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                 <div className="space-y-2">
                   <Label htmlFor="phoneNumber">Phone Number</Label>
@@ -455,14 +505,16 @@ export default function AddMoneyPage() {
                     disabled={isVerifying || !phoneNumber}
                     className="w-full"
                   >
-                    {isVerifying ? 'Verifying...' : 'Verify Phone Number'}
+                    {isVerifying ? "Verifying..." : "Verify Phone Number"}
                   </Button>
                 ) : (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                       <User className="h-4 w-4 text-green-600" />
                       <div>
-                        <p className="text-sm font-medium text-green-800">Verified User</p>
+                        <p className="text-sm font-medium text-green-800">
+                          Verified User
+                        </p>
                         <p className="text-sm text-green-600">{userName}</p>
                       </div>
                     </div>
@@ -470,8 +522,8 @@ export default function AddMoneyPage() {
                       type="button"
                       variant="outline"
                       onClick={() => {
-                        setPhoneNumber('');
-                        setUserName('');
+                        setPhoneNumber("");
+                        setUserName("");
                         setShowUserInfo(false);
                       }}
                       className="w-full"
@@ -483,7 +535,7 @@ export default function AddMoneyPage() {
               </div>
             )}
 
-            {paymentMethod === 'bank_transfer' && (
+            {paymentMethod === "bank_transfer" && (
               <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                 {/* Bank Account Selector */}
                 {!showManualBankForm && (
@@ -500,7 +552,9 @@ export default function AddMoneyPage() {
                 {showManualBankForm && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium">Enter Bank Details</h3>
+                      <h3 className="text-lg font-medium">
+                        Enter Bank Details
+                      </h3>
                       <Button
                         type="button"
                         variant="outline"
@@ -510,10 +564,13 @@ export default function AddMoneyPage() {
                         Use Linked Account
                       </Button>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="bank">Select Bank</Label>
-                      <Select value={selectedBank} onValueChange={setSelectedBank}>
+                      <Select
+                        value={selectedBank}
+                        onValueChange={setSelectedBank}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Choose your bank" />
                         </SelectTrigger>
@@ -547,13 +604,17 @@ export default function AddMoneyPage() {
                         id="ifscCode"
                         placeholder="Enter IFSC code"
                         value={ifscCode}
-                        onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                        onChange={(e) =>
+                          setIfscCode(e.target.value.toUpperCase())
+                        }
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="accountHolderName">Account Holder Name</Label>
+                      <Label htmlFor="accountHolderName">
+                        Account Holder Name
+                      </Label>
                       <Input
                         id="accountHolderName"
                         placeholder="Enter account holder name"
@@ -571,9 +632,12 @@ export default function AddMoneyPage() {
                     <div className="flex items-center gap-2">
                       <Banknote className="h-4 w-4 text-green-600" />
                       <div>
-                        <p className="text-sm font-medium text-green-800">Selected Account</p>
+                        <p className="text-sm font-medium text-green-800">
+                          Selected Account
+                        </p>
                         <p className="text-sm text-green-600">
-                          {selectedBankAccount.bankName} • {selectedBankAccount.accountNumber.slice(-4)}
+                          {selectedBankAccount.bankName} •{" "}
+                          {selectedBankAccount.accountNumber.slice(-4)}
                         </p>
                       </div>
                     </div>
@@ -584,7 +648,12 @@ export default function AddMoneyPage() {
                   <Button
                     type="button"
                     onClick={handleSendOtp}
-                    disabled={!selectedBank || !accountNumber || !ifscCode || !accountHolderName}
+                    disabled={
+                      !selectedBank ||
+                      !accountNumber ||
+                      !ifscCode ||
+                      !accountHolderName
+                    }
                     className="w-full"
                   >
                     Send OTP
@@ -615,7 +684,7 @@ export default function AddMoneyPage() {
                         type="button"
                         variant="outline"
                         onClick={() => {
-                          setOtp('');
+                          setOtp("");
                           setShowOtpInput(false);
                           setIsOtpSent(false);
                         }}
@@ -629,7 +698,7 @@ export default function AddMoneyPage() {
                         disabled={isOtpVerifying || !otp}
                         className="flex-1"
                       >
-                        {isOtpVerifying ? 'Verifying...' : 'Verify OTP'}
+                        {isOtpVerifying ? "Verifying..." : "Verify OTP"}
                       </Button>
                     </div>
                   </div>
@@ -637,7 +706,7 @@ export default function AddMoneyPage() {
               </div>
             )}
 
-            {paymentMethod === 'card_payment' && (
+            {paymentMethod === "card_payment" && (
               <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                 <div className="space-y-2">
                   <Label htmlFor="cardNumber">Card Number</Label>
@@ -647,7 +716,9 @@ export default function AddMoneyPage() {
                       id="cardNumber"
                       placeholder="1234 5678 9012 3456"
                       value={cardNumber}
-                      onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                      onChange={(e) =>
+                        setCardNumber(formatCardNumber(e.target.value))
+                      }
                       className="pl-10"
                       maxLength={19}
                       required
@@ -705,7 +776,9 @@ export default function AddMoneyPage() {
                       id="cvv"
                       placeholder="123"
                       value={cvv}
-                      onChange={(e) => setCvv(e.target.value.replace(/\D/g, ''))}
+                      onChange={(e) =>
+                        setCvv(e.target.value.replace(/\D/g, ""))
+                      }
                       maxLength={4}
                       required
                     />
@@ -716,7 +789,13 @@ export default function AddMoneyPage() {
                   <Button
                     type="button"
                     onClick={handleSendCardOtp}
-                    disabled={!cardNumber || !cardHolderName || !expiryMonth || !expiryYear || !cvv}
+                    disabled={
+                      !cardNumber ||
+                      !cardHolderName ||
+                      !expiryMonth ||
+                      !expiryYear ||
+                      !cvv
+                    }
                     className="w-full"
                   >
                     Send OTP
@@ -747,7 +826,7 @@ export default function AddMoneyPage() {
                         type="button"
                         variant="outline"
                         onClick={() => {
-                          setCardOtp('');
+                          setCardOtp("");
                           setShowCardOtpInput(false);
                           setIsCardOtpSent(false);
                         }}
@@ -761,7 +840,7 @@ export default function AddMoneyPage() {
                         disabled={isCardOtpVerifying || !cardOtp}
                         className="flex-1"
                       >
-                        {isCardOtpVerifying ? 'Verifying...' : 'Verify OTP'}
+                        {isCardOtpVerifying ? "Verifying..." : "Verify OTP"}
                       </Button>
                     </div>
                   </div>
@@ -772,17 +851,18 @@ export default function AddMoneyPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading || 
-                (paymentMethod === 'wallet' && !showUserInfo) ||
-                (paymentMethod === 'bank_transfer' && !selectedBank) ||
-                (paymentMethod === 'card_payment' && !cardNumber)
+              disabled={
+                isLoading ||
+                (paymentMethod === "wallet" && !showUserInfo) ||
+                (paymentMethod === "bank_transfer" && !selectedBank) ||
+                (paymentMethod === "card_payment" && !cardNumber)
               }
             >
-              {isLoading ? 'Processing...' : 'Add Money'}
+              {isLoading ? "Processing..." : "Add Money"}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
   );
-} 
+}

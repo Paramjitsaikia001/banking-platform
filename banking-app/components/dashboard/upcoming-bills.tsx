@@ -7,21 +7,21 @@ export default function UpcomingBills() {
   const bills = [
     {
       name: "Electricity Bill",
-      amount: "$85.20",
+      amount: "₹85.20",
       dueDate: "May 25, 2023",
       daysLeft: 5,
       progress: 80,
     },
     {
       name: "Internet Service",
-      amount: "$59.99",
+      amount: "₹59.99",
       dueDate: "May 28, 2023",
       daysLeft: 8,
       progress: 60,
     },
     {
       name: "Water Bill",
-      amount: "$42.50",
+      amount: "₹42.50",
       dueDate: "June 2, 2023",
       daysLeft: 13,
       progress: 40,
@@ -54,7 +54,9 @@ export default function UpcomingBills() {
               </div>
             </div>
           ))}
-          <Button variant="outline" className="w-full text-sm">
+          <Button
+          // onClick={()=>{route.push(/bills)}}
+          variant="outline" className="w-full text-sm">
             View All Bills
           </Button>
         </div>

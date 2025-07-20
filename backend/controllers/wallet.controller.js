@@ -58,17 +58,11 @@ exports.addMoney = asyncHandler(async (req, res) => {
     session.startTransaction();
 
     try {
-        const wallet = await Wallet.findOne({ userId: req.user._id }).session(session);
-
+        let wallet = await Wallet.findOne({ userId: req.user._id }).session(session);
         if (!wallet) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(404).json({
-                status: 'error',
-                message: 'Wallet not found for this user.',
-            });
+            // Create wallet for user if not exists
+            wallet = await Wallet.createWalletForUser(req.user._id);
         }
-
         wallet.balance += amount;
         await wallet.save({ session });
 

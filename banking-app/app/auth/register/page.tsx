@@ -1,15 +1,19 @@
-"use client"
+"use client";
 
-import React from 'react';
-import { useRegistration, RegistrationProvider } from '@/context/RegistrationContext';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { authApi } from '@/utils/api';
-import { useUser } from '@/context/UserContext';
+import React from "react";
+import { useAuth } from "@/app/context/auth-context";
+import {
+  useRegistration,
+  RegistrationProvider,
+} from "@/context/RegistrationContext";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { authApi } from "@/utils/api";
+import { useUser } from "@/context/UserContext";
 
 // Step 1: Phone Number and Email Verification
 const PhoneEmailStep = () => {
@@ -19,9 +23,9 @@ const PhoneEmailStep = () => {
     e.preventDefault();
     try {
       await authApi.startRegistration(data.phoneNumber);
-      toast.success('Phone OTP sent successfully');
+      toast.success("Phone OTP sent successfully");
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to send phone OTP');
+      toast.error(error?.message || "Failed to send phone OTP");
     }
   };
 
@@ -29,9 +33,9 @@ const PhoneEmailStep = () => {
     e.preventDefault();
     try {
       await authApi.verifyPhone(data.phoneNumber, data.phoneOtp);
-      toast.success('Phone number verified');
+      toast.success("Phone number verified");
     } catch (error: any) {
-      toast.error(error?.message || 'Invalid phone OTP');
+      toast.error(error?.message || "Invalid phone OTP");
     }
   };
 
@@ -39,9 +43,9 @@ const PhoneEmailStep = () => {
     e.preventDefault();
     try {
       await authApi.sendEmailVerification(data.email, data.phoneNumber);
-      toast.success('Email OTP sent successfully');
+      toast.success("Email OTP sent successfully");
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to send email OTP');
+      toast.error(error?.message || "Failed to send email OTP");
     }
   };
 
@@ -49,10 +53,10 @@ const PhoneEmailStep = () => {
     e.preventDefault();
     try {
       await authApi.verifyEmail(data.email, data.emailOtp);
-      toast.success('Email verified');
+      toast.success("Email verified");
       setStep(2);
     } catch (error: any) {
-      toast.error(error?.message || 'Invalid email OTP');
+      toast.error(error?.message || "Invalid email OTP");
     }
   };
 
@@ -69,28 +73,32 @@ const PhoneEmailStep = () => {
             <Input
               id="phoneNumber"
               type="tel"
-              value={data.phoneNumber || ''}
+              value={data.phoneNumber || ""}
               onChange={(e) => updateData({ phoneNumber: e.target.value })}
               required
               pattern="[0-9]{10}"
               placeholder="Enter your phone number"
             />
           </div>
-          <Button onClick={handleSendPhoneOtp} type="button">Send Phone OTP</Button>
-          
+          <Button onClick={handleSendPhoneOtp} type="button">
+            Send Phone OTP
+          </Button>
+
           <div>
             <Label htmlFor="phoneOtp">Phone OTP</Label>
             <Input
               id="phoneOtp"
               type="text"
-              value={data.phoneOtp || ''}
+              value={data.phoneOtp || ""}
               onChange={(e) => updateData({ phoneOtp: e.target.value })}
               required
               pattern="[0-9]{6}"
               placeholder="Enter 6-digit phone OTP"
             />
           </div>
-          <Button onClick={handleVerifyPhone} type="button">Verify Phone OTP</Button>
+          <Button onClick={handleVerifyPhone} type="button">
+            Verify Phone OTP
+          </Button>
         </CardContent>
       </Card>
 
@@ -105,27 +113,31 @@ const PhoneEmailStep = () => {
             <Input
               id="email"
               type="email"
-              value={data.email || ''}
+              value={data.email || ""}
               onChange={(e) => updateData({ email: e.target.value })}
               required
               placeholder="Enter your email address"
             />
           </div>
-          <Button onClick={handleSendEmailOtp} type="button">Send Email OTP</Button>
-          
+          <Button onClick={handleSendEmailOtp} type="button">
+            Send Email OTP
+          </Button>
+
           <div>
             <Label htmlFor="emailOtp">Email OTP</Label>
             <Input
               id="emailOtp"
               type="text"
-              value={data.emailOtp || ''}
+              value={data.emailOtp || ""}
               onChange={(e) => updateData({ emailOtp: e.target.value })}
               required
               pattern="[0-9]{6}"
               placeholder="Enter 6-digit email OTP"
             />
           </div>
-          <Button onClick={handleVerifyEmail} type="button">Verify Email OTP</Button>
+          <Button onClick={handleVerifyEmail} type="button">
+            Verify Email OTP
+          </Button>
         </CardContent>
       </Card>
     </div>
@@ -136,24 +148,33 @@ const PhoneEmailStep = () => {
 const PersonalDetailsStep = () => {
   const { data, updateData, setStep } = useRegistration();
   const router = useRouter();
+  const { setUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (data.password !== data.confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       return;
     }
 
     // Password validation
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(data.password)) {
-      toast.error('Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character');
+      toast.error(
+        "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character"
+      );
       return;
     }
 
     // PIN validation (4-6 digits)
-    if (!data.pin || data.pin.length < 4 || data.pin.length > 6 || !/^\d+$/.test(data.pin)) {
-      toast.error('PIN must be 4-6 digits');
+    if (
+      !data.pin ||
+      data.pin.length < 4 ||
+      data.pin.length > 6 ||
+      !/^\d+$/.test(data.pin)
+    ) {
+      toast.error("PIN must be 4-6 digits");
       return;
     }
 
@@ -165,19 +186,34 @@ const PersonalDetailsStep = () => {
         dateOfBirth: data.dateOfBirth,
         password: data.password,
         phoneNumber: data.phoneNumber,
-        pin: data.pin
+        pin: data.pin,
       });
-      
-      toast.success('Registration successful!');
-      
+
+      toast.success("Registration successful!");
+
       // Store the token and user data
-      localStorage.setItem('bankapp_token', response.token);
-      localStorage.setItem('bankapp_user', JSON.stringify(response.user));
-      
+      localStorage.setItem("bankapp_token", response.token);
+      localStorage.setItem("bankapp_user", JSON.stringify(response.user));
+
+      // Set user in AuthContext so dashboard authentication works
+      if (setUser) {
+        setUser({
+          id: response.user._id || response.user.id || "",
+          name:
+            `${response.user.firstName || ""} ${
+              response.user.lastName || ""
+            }`.trim() ||
+            response.user.name ||
+            "User",
+          email: response.user.email || "",
+          phone: response.user.phoneNumber || response.user.phone || "",
+        });
+      }
+
       // Redirect to dashboard
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (error: any) {
-      toast.error(error?.message || 'Registration failed');
+      toast.error(error?.message || "Registration failed");
     }
   };
 
@@ -188,7 +224,7 @@ const PersonalDetailsStep = () => {
           <Label htmlFor="firstName">First Name</Label>
           <Input
             id="firstName"
-            value={data.firstName || ''}
+            value={data.firstName || ""}
             onChange={(e) => updateData({ firstName: e.target.value })}
             required
           />
@@ -197,7 +233,7 @@ const PersonalDetailsStep = () => {
           <Label htmlFor="lastName">Last Name</Label>
           <Input
             id="lastName"
-            value={data.lastName || ''}
+            value={data.lastName || ""}
             onChange={(e) => updateData({ lastName: e.target.value })}
             required
           />
@@ -208,7 +244,7 @@ const PersonalDetailsStep = () => {
         <Input
           id="dateOfBirth"
           type="date"
-          value={data.dateOfBirth || ''}
+          value={data.dateOfBirth || ""}
           onChange={(e) => updateData({ dateOfBirth: e.target.value })}
           required
         />
@@ -218,14 +254,15 @@ const PersonalDetailsStep = () => {
         <Input
           id="password"
           type="password"
-          value={data.password || ''}
+          value={data.password || ""}
           onChange={(e) => updateData({ password: e.target.value })}
           required
           minLength={8}
           placeholder="Enter password"
         />
         <p className="text-sm text-gray-500 mt-1">
-          Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number, and one special character
+          Password must contain at least 8 characters, one uppercase letter, one
+          lowercase letter, one number, and one special character
         </p>
       </div>
       <div>
@@ -233,7 +270,7 @@ const PersonalDetailsStep = () => {
         <Input
           id="confirmPassword"
           type="password"
-          value={data.confirmPassword || ''}
+          value={data.confirmPassword || ""}
           onChange={(e) => updateData({ confirmPassword: e.target.value })}
           required
           minLength={8}
@@ -245,7 +282,7 @@ const PersonalDetailsStep = () => {
         <Input
           id="pin"
           type="password"
-          value={data.pin || ''}
+          value={data.pin || ""}
           onChange={(e) => updateData({ pin: e.target.value })}
           required
           minLength={4}
@@ -282,12 +319,12 @@ const RegisterPageContent = () => {
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
           <p className="text-gray-600">
-            {step === 1 ? 'Verify your phone and email' : 'Complete your profile'}
+            {step === 1
+              ? "Verify your phone and email"
+              : "Complete your profile"}
           </p>
         </CardHeader>
-        <CardContent>
-          {renderStep()}
-        </CardContent>
+        <CardContent>{renderStep()}</CardContent>
       </Card>
     </div>
   );

@@ -1,7 +1,9 @@
+
 const express = require('express');
 const router = express.Router();
 const { auth, verifyPin } = require('../middleware/auth.middleware'); // Import verifyPin
 const walletController = require('../controllers/wallet.controller'); // Import walletController
+const Wallet = require('../models/wallet.model'); // FIX: Import Wallet model
 
 // All routes are protected by authentication
 router.use(auth);
