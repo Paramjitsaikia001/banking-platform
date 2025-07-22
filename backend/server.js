@@ -1,279 +1,108 @@
+// Load environment variables from .env file
 require('dotenv').config();
+
+// Import dependencies
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const session = require('express-session');
+const MongoStore = require('connect-mongo'); // Import for persistent sessions
 
-// Import routes
+// --- Route Imports ---
 const authRoutes = require('./routes/auth.routes');
-// Removed: const bankAccountRoutes = require('./routes/bankAccount.routes'); // This route file is now redundant
 const transactionRoutes = require('./routes/transaction.routes');
 const walletRoutes = require('./routes/wallet.routes');
-const bankRoutes = require('./routes/bank.routes'); // This now handles all bank account operations
+const bankRoutes = require('./routes/bank.routes');
 const paymentRoutes = require('./routes/payment.routes');
 
+// --- Initialize Express App ---
 const app = express();
 
-// Middleware
+// --- Core Middleware ---
+
+// Set the environment (defaults to 'development' if not set)
+const isProduction = process.env.NODE_ENV === 'production';
+
+// CORS configuration for allowing frontend requests
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range'],
-    preflightContinue: false,
-    optionsSuccessStatus: 204
-
 }));
 
-// Configure helmet for security
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-    crossOriginOpenerPolicy: { policy: "unsafe-none" },
-    crossOriginEmbedderPolicy: false
-}));
+// Set security-related HTTP headers
+app.use(helmet());
 
-app.use(morgan('dev'));
+// Log HTTP requests in development
+if (!isProduction) {
+    app.use(morgan('dev'));
+}
+
+// Parse JSON and URL-encoded request bodies
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Session configuration
+// --- Session Management ---
+// Configure sessions to be stored in MongoDB for persistence and production stability
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: true,
-    saveUninitialized: true,
+    secret: process.env.SESSION_SECRET || 'a-very-strong-secret-key-that-is-at-least-32-chars-long',
+    resave: false, // Don't save session if unmodified
+    saveUninitialized: false, // Don't create session until something is stored
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        collectionName: 'sessions', // Optional: name of the collection to store sessions
+    }),
     cookie: {
-        secure: false, // Set to false for development
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        secure: isProduction, // Use secure cookies in production (requires HTTPS)
+        httpOnly: true, // Prevents client-side JS from accessing the cookie
         sameSite: 'lax',
-        httpOnly: false // Set to false for Postman testing
     }
 }));
 
-// Health check route
+// --- API Routes ---
+
+// Health check endpoint
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', message: 'Server is running' });
+    res.status(200).json({ status: 'ok', message: 'Server is healthy' });
 });
 
-// API documentation route
-app.get('/api-docs', (req, res) => {
-    res.json({
-        message: 'Banking Platform API Documentation',
-        endpoints: {
-            auth: {
-                register: {
-                    method: 'POST',
-                    path: '/api/auth/register',
-                    body: {
-                        email: 'string',
-                        password: 'string',
-                        firstName: 'string',
-                        lastName: 'string',
-                        phoneNumber: 'string'
-                    }
-                },
-                login: {
-                    method: 'POST',
-                    path: '/api/auth/login',
-                    body: {
-                        email: 'string',
-                        password: 'string'
-                    }
-                },
-                getCurrentUser: {
-                    method: 'GET',
-                    path: '/api/auth/me',
-                    auth: 'required'
-                }
-            },
-            // Updated 'accounts' documentation to reflect consolidated '/api/bank/accounts' routes
-            bankAccounts: { // Renamed from 'accounts' for clarity
-                create: {
-                    method: 'POST',
-                    path: '/api/bank/accounts', // Updated path
-                    auth: 'required',
-                    body: {
-                        bankName: 'string',
-                        accountHolderName: 'string',
-                        accountNumber: 'string',
-                        ifscCode: 'string',
-                        accountType: 'savings|checking|business|current', // Updated enum
-                        currency: 'string',
-                        isDefault: 'boolean (optional)'
-                    }
-                },
-                list: {
-                    method: 'GET',
-                    path: '/api/bank/accounts', // Updated path
-                    auth: 'required'
-                },
-                get: {
-                    method: 'GET',
-                    path: '/api/bank/accounts/:accountId', // Updated path and param name
-                    auth: 'required'
-                },
-                update: {
-                    method: 'PATCH',
-                    path: '/api/bank/accounts/:accountId', // Updated path and param name
-                    auth: 'required',
-                    body: {
-                        isDefault: 'boolean (optional)',
-                        status: 'active|inactive|frozen|closed (optional)', // Updated enum
-                        isVerified: 'boolean (optional, for admin/internal use)'
-                    }
-                },
-                delete: {
-                    method: 'DELETE',
-                    path: '/api/bank/accounts/:accountId', // Updated path and param name
-                    auth: 'required'
-                },
-                transferToBank: {
-                    method: 'POST',
-                    path: '/api/bank/transfer-to-bank',
-                    auth: 'required',
-                    body: {
-                        accountId: 'string',
-                        amount: 'number',
-                        pin: 'string'
-                    }
-                },
-                transferFromBank: {
-                    method: 'POST',
-                    path: '/api/bank/transfer-from-bank',
-                    auth: 'required',
-                    body: {
-                        accountId: 'string',
-                        amount: 'number',
-                        pin: 'string'
-                    }
-                }
-            },
-            transactions: {
-                create: {
-                    method: 'POST',
-                    path: '/api/transactions',
-                    auth: 'required',
-                    body: {
-                        type: 'deposit|withdrawal|transfer|billPayment|recharge',
-                        amount: 'number',
-                        description: 'string',
-                        paymentMethod: 'wallet|bank|card|upi',
-                        recipientDetails: {
-                            userId: 'string (optional, for transfers)',
-                            name: 'string',
-                            phone: 'string',
-                            email: 'string'
-                        },
-                        bankAccount: {
-                            bankName: 'string (optional, for bank-related transactions)',
-                            accountNumber: 'string',
-                            ifscCode: 'string'
-                        }
-                    }
-                },
-                list: {
-                    method: 'GET',
-                    path: '/api/transactions',
-                    auth: 'required',
-                    query: {
-                        type: 'string (optional)',
-                        startDate: 'date (optional)',
-                        endDate: 'date (optional)',
-                        limit: 'number (optional, default 10)',
-                        skip: 'number (optional, default 0)'
-                    }
-                },
-                stats: {
-                    method: 'GET',
-                    path: '/api/transactions/stats',
-                    auth: 'required',
-                    query: {
-                        startDate: 'date (optional)',
-                        endDate: 'date (optional)'
-                    }
-                },
-                get: {
-                    method: 'GET',
-                    path: '/api/transactions/:id',
-                    auth: 'required'
-                }
-            },
-            wallet: {
-                getBalance: {
-                    method: 'GET',
-                    path: '/api/wallet/balance',
-                    auth: 'required'
-                },
-                addMoney: {
-                    method: 'POST',
-                    path: '/api/wallet/add-money',
-                    auth: 'required',
-                    body: {
-                        amount: 'number',
-                        paymentMethod: 'card|bank|upi',
-                        transactionRef: 'string (optional, for external ref)'
-                    }
-                },
-                transfer: {
-                    method: 'POST',
-                    path: '/api/wallet/transfer',
-                    auth: 'required',
-                    body: {
-                        recipientIdentifier: 'string (userId, phoneNumber, or upiId)',
-                        amount: 'number',
-                        description: 'string (optional)',
-                        pin: 'string'
-                    }
-                }
-            },
-            payments: {
-                qrPayment: {
-                    method: 'POST',
-                    path: '/api/payments/qr',
-                    auth: 'required',
-                    body: {
-                        recipientId: 'string (user ID)',
-                        amount: 'number',
-                        pin: 'string'
-                    }
-                }
-            }
-        }
-    });
-});
-
-// Routes
+// Mount the main application routes
 app.use('/api/auth', authRoutes);
-// Removed: app.use('/api/accounts', bankAccountRoutes); // This route is now handled by /api/bank
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/wallet', walletRoutes);
-app.use('/api/bank', bankRoutes); // All bank account operations are now under /api/bank
+app.use('/api/bank', bankRoutes);
 app.use('/api/payments', paymentRoutes);
 
-// Error handling middleware
+// --- Error Handling Middleware ---
+// Catch-all for handling errors that occur in the application
 app.use((err, req, res, next) => {
-    console.error('Error:', err);
+    console.error('Error:', err.stack);
     res.status(err.status || 500).json({
-        message: err.message || 'Something went wrong!',
-        error: process.env.NODE_ENV === 'development' ? err : {}
+        message: err.message || 'An unexpected error occurred.',
+        // Only show detailed error in development
+        error: !isProduction ? err : {}
     });
 });
 
-// Connect to MongoDB and start server
+// --- Server Startup ---
 const startServer = async () => {
-    try {
-        await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/banking-platform');
-        console.log('Connected to MongoDB');
+    if (!process.env.MONGODB_URI || !process.env.SESSION_SECRET) {
+        console.error('FATAL ERROR: MONGODB_URI and SESSION_SECRET environment variables are required.');
+        process.exit(1);
+    }
 
-        const PORT = process.env.PORT || 3000;
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
+        console.log('Successfully connected to MongoDB.');
+
+        const PORT = process.env.PORT || 8080;
         app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-            console.log(`Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3001'}`);
+            console.log(`Server is running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode.`);
         });
     } catch (error) {
-        console.error('Failed to start server:', error);
+        console.error('Failed to connect to MongoDB or start server:', error);
         process.exit(1);
     }
 };
