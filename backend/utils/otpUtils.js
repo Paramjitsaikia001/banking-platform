@@ -1,4 +1,3 @@
-const speakeasy = require('speakeasy');
 const twilio = require('twilio');
 const nodemailer = require('nodemailer');
 
@@ -20,7 +19,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Generate OTP
+// Generate OTP (This function remains the same as it generates a random 6-digit code)
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
@@ -70,14 +69,10 @@ const sendEmailOTP = async (email, otp) => {
     }
 };
 
-// Verify OTP
-const verifyOTP = (token, secret) => {
-    return speakeasy.totp.verify({
-        secret: secret,
-        encoding: 'base32',
-        token: token,
-        window: 1 // Allow 30 seconds clock skew
-    });
+// *** MODIFIED: Direct comparison for OTP verification ***
+const verifyOTP = (inputOtp, storedOtp) => {
+    // Ensure both are strings and trim any whitespace
+    return String(inputOtp).trim() === String(storedOtp).trim();
 };
 
 module.exports = {
@@ -85,4 +80,4 @@ module.exports = {
     sendSMSOTP,
     sendEmailOTP,
     verifyOTP
-}; 
+};
