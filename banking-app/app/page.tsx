@@ -76,6 +76,7 @@ export default function HomePage() {
   if (!isLoading && user) {
     return null;
   }
+console.log("API URL:", process.env.NEXT_PUBLIC_API_URL);
 
   return (
     <>
