@@ -62,7 +62,7 @@ export default function HomePage() {
     // Optional: example backend request
     const getSomething = async () => {
       try {
-        const res = await fetch(`${API_URL}/auth/login`);
+        const res = await fetch(`${API_URL}/api/auth`);
         const data = await res.json();
         console.log("Backend response:", data);
       } catch (error) {
