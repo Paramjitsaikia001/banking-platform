@@ -23,11 +23,31 @@ const app = express();
 
 // --- Core Middleware ---
 const isProduction = process.env.NODE_ENV === 'production';
+
+
+// app.use(cors({
+//     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+//     origin:'https://banking-platform-paramjitsaikia001s-projects.vercel.app',
+//     credentials: true,
+// }));
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'https://banking-platform-paramjitsaikia001s-projects.vercel.app'
+];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    origin:'https://banking-platform-paramjitsaikia001s-projects.vercel.app',
-    credentials: true,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
 }));
+
 app.use(helmet());
 if (!isProduction) {
     app.use(morgan('dev'));
