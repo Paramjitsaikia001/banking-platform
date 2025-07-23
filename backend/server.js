@@ -25,6 +25,7 @@ const app = express();
 const isProduction = process.env.NODE_ENV === 'production';
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin:'https://banking-platform-paramjitsaikia001s-projects.vercel.app',
     credentials: true,
 }));
 app.use(helmet());
