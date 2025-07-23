@@ -51,6 +51,7 @@ async function api(endpoint: string, options: ApiOptions = {}) {
     // Handle API errors consistently
     if (!response.ok) {
         const error = await response.json();
+        console.log("error");
         throw error;
     }
 

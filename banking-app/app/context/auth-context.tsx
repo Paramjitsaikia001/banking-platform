@@ -65,6 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       // Call the real login API
+      console.log("API URL:", `${API_BASE_URL}/auth/login`);
+
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
@@ -137,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Wallet can be initialized later
       }
     } catch (error) {
+        console.log("heheh");
       console.error("Login failed:", error);
       throw error;
     } finally {
