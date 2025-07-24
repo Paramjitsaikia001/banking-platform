@@ -27,6 +27,12 @@ interface WalletContextType {
   resetWallet: () => void;
 }
 
+
+const API_BASE_URL =
+  `${process.env.NEXT_PUBLIC_API_URL}/api` || "http://localhost:3001/api";
+
+
+
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
@@ -67,7 +73,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
         // Fetch wallet balance
         const balanceRes = await fetch(
-          "http://localhost:5000/api/wallet/balance",
+          `${API_BASE_URL}/wallet/balance`,
           fetchOptions
         );
         if (balanceRes.ok) {
@@ -76,15 +82,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         } else {
           setBalance(0);
         }
-
+// fetch(`${API_BASE_URL}/auth/login`
         // Fetch transactions
         const txRes = await fetch(
-          "http://localhost:5000/api/transactions",
+          `${API_BASE_URL}/transactions`,
           fetchOptions
         );
         if (txRes.ok) {
           const txData = await txRes.json();
-          setTransactions(txData.data ?? []);
+          setTransactions(Array.isArray(txData.data) ? txData.data : []);
         } else {
           setTransactions([]);
         }
@@ -101,10 +107,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addTransaction = useCallback((transaction: Transaction) => {
-    setTransactions((prevTransactions) => {
-      const newTransactions = [transaction, ...prevTransactions].slice(0, 10); // Keep only 10 most recent
+    setTransactions((prevTransactions = []) => {
+      const newTransactions = [transaction, ...prevTransactions].slice(0, 10);
       return newTransactions;
-    });
+    });    
   }, []);
 
   const refreshData = useCallback(() => {

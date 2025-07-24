@@ -15,7 +15,7 @@
  */
 
 // API base URL - configurable via environment variable
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL}/api` || 'http://localhost:3001/api';
 
 // TypeScript interface for API request options
 interface ApiOptions {
@@ -73,7 +73,7 @@ export const authApi = {
      * @param phoneNumber - User's phone number
      */
     startRegistration: (phoneNumber: string) =>
-        api('/auth/start-registration', {
+        api('/api/auth/start-registration', {
             method: 'POST',
             body: { phoneNumber: phoneNumber.replace(/\D/g, '') } // Remove non-digits
         }),

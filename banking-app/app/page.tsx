@@ -51,7 +51,7 @@ export default function HomePage() {
   const router = useRouter();
 
   // ✅ Define your backend URL from env
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
   // Example useEffect to fetch something from backend
   useEffect(() => {
@@ -59,18 +59,18 @@ export default function HomePage() {
       router.replace("/dashboard");
     }
 
-    // Optional: example backend request
-    const getSomething = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/auth/register`);
-        const data = await res.json();
-        console.log("Backend response:", data);
-      } catch (error) {
-        console.error("Failed to fetch from backend", error);
-      }
-    };
+   // Optional: example backend request
+    // const getSomething = async () => {
+    //   try {
+    //     const res = await fetch(`${API_URL}/auth/login`);
+    //     const data = await res.json();
+    //     console.log("Backend response:", data);
+    //   } catch (error) {
+    //     console.error("Failed to fetch from backend", error);
+    //   }
+    // };
 
-    getSomething();
+    // getSomething();
   }, [user, isLoading, router, API_URL]);
 
   if (!isLoading && user) {

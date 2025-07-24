@@ -23,7 +23,9 @@ export default function RecentTransactions() {
   const { transactions } = useWallet();
 
   const formatTransactions = (): Transaction[] => {
-    if (transactions.length === 0) {
+    // if (transactions.length === 0) {
+
+    if (!Array.isArray(transactions) || transactions.length === 0) {
       // Return default transactions if none exist
       return [
         {
