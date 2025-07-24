@@ -73,7 +73,7 @@ export const authApi = {
      * @param phoneNumber - User's phone number
      */
     startRegistration: (phoneNumber: string) =>
-        api('/api/auth/start-registration', {
+        api('/auth/start-registration', {
             method: 'POST',
             body: { phoneNumber: phoneNumber.replace(/\D/g, '') } // Remove non-digits
         }),
