@@ -14,60 +14,115 @@ const generateToken = (userId) => {
   });
 };
 
+
+function normalizePhone(phone) {
+  phone = phone.trim();
+  if (!phone.startsWith('+91')) {
+    phone = '+91' + phone.replace(/^0+/, ''); // remove leading zeros
+  }
+  return phone;
+}
+
+
 // Step 1: Start registration with phone number
+// exports.startRegistration = async (req, res) => {
+//   try {
+//     const { phoneNumber } = req.body;
+
+//     // Check if phone number already exists
+//     const existingUser = await User.findOne({ phoneNumber });
+//     if (existingUser) {
+//       return res.status(400).json({ message: 'Phone number already registered' });
+//     }
+
+
+//     //generate the otp
+//     const otp =generateOTP();
+
+//     const sent = await sendSMSOTP(phoneNumber,otp);
+//     if(!sent){
+//       return res.status(500).json({message:`failed to send otp`});
+//     }
+
+//     otpStore.set(phoneNumber,otp);
+//     // In a real application, you would send an OTP here
+//     // For now, we'll just return a success message
+//     res.json({
+//       message: 'OTP sent successfully',
+//       phoneNumber
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error starting registration', error: error.message });
+//   }
+// };
+
 exports.startRegistration = async (req, res) => {
   try {
-    const { phoneNumber } = req.body;
+    const rawPhone = req.body.phoneNumber;
+    const phoneNumber = normalizePhone(rawPhone); // 🔧 normalize
 
-    // Check if phone number already exists
     const existingUser = await User.findOne({ phoneNumber });
     if (existingUser) {
       return res.status(400).json({ message: 'Phone number already registered' });
     }
 
+    const otp = generateOTP();
+    const sent = await sendSMSOTP(phoneNumber, otp); // send to normalized
 
-    //generate the otp
-    const otp =generateOTP();
-
-    const sent = await sendSMSOTP(phoneNumber,otp);
-    if(!sent){
-      return res.status(500).json({message:`failed to send otp`});
+    if (!sent) {
+      return res.status(500).json({ message: 'Failed to send OTP' });
     }
 
-    otpStore.set(phoneNumber,otp);
-    // In a real application, you would send an OTP here
-    // For now, we'll just return a success message
-    res.json({
-      message: 'OTP sent successfully',
-      phoneNumber
-    });
+    otpStore.set(phoneNumber, otp); // 🔐 store using normalized key
+
+    res.json({ message: 'OTP sent successfully', phoneNumber });
   } catch (error) {
     res.status(500).json({ message: 'Error starting registration', error: error.message });
   }
 };
 
+
 // Step 2: Verify phone number
+// exports.verifyPhone = async (req, res) => {
+//   try {
+//     const { phoneNumber, otp } = req.body;
+
+//     const storedOtp = otpStore.get(phoneNumber);
+//     if (!storedOtp || !verifyOTP(otp, storedOtp)) {
+//       return res.status(400).json({ message: 'Invalid or expired OTP' });
+//     }
+
+//      // OTP verified — remove from store
+//      otpStore.delete(phoneNumber);
+//     // In a real application, you would verify the OTP here
+//     // For now, we'll just return a success message
+//     res.json({
+//       message: 'Phone number verified successfully',
+//       phoneNumber
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error verifying phone number', error: error.message });
+//   }
+// };
 exports.verifyPhone = async (req, res) => {
   try {
-    const { phoneNumber, otp } = req.body;
+    const rawPhone = req.body.phoneNumber;
+    const otp = req.body.otp;
+    const phoneNumber = normalizePhone(rawPhone); // 🔧 normalize
 
-    const storedOtp = otpStore.get(phoneNumber);
+    const storedOtp = otpStore.get(phoneNumber); // 🔍 use normalized
     if (!storedOtp || !verifyOTP(otp, storedOtp)) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
-     // OTP verified — remove from store
-     otpStore.delete(phoneNumber);
-    // In a real application, you would verify the OTP here
-    // For now, we'll just return a success message
-    res.json({
-      message: 'Phone number verified successfully',
-      phoneNumber
-    });
+    otpStore.delete(phoneNumber);
+
+    res.json({ message: 'Phone number verified successfully', phoneNumber });
   } catch (error) {
     res.status(500).json({ message: 'Error verifying phone number', error: error.message });
   }
 };
+
 
 // Step 3: Register with email
 exports.registerWithEmail = async (req, res) => {

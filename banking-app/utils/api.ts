@@ -67,7 +67,17 @@ async function api(endpoint: string, options: ApiOptions = {}) {
  * - KYC (Know Your Customer) submission
  * - Account verification processes
  */
+function normalizePhone(phone: string): string {
+    phone = phone.trim();
+    if (!phone.startsWith('+91')) {
+      phone = '+91' + phone.replace(/^0+/, ''); // remove leading 0s if any
+    }
+    return phone;
+  }
 export const authApi = {
+
+
+      
     /**
      * Start the registration process by sending OTP to phone number
      * @param phoneNumber - User's phone number
@@ -76,7 +86,7 @@ export const authApi = {
         api('/auth/start-registration', {
             method: 'POST',
             // body: { phoneNumber: phoneNumber.replace(/\D/g, '') } // Remove non-digits
-            body: { phoneNumber } // ✅ keep the +91
+            body: { phoneNumber:normalizePhone(phoneNumber) } // ✅ keep the +91
         }),
 
     /**
@@ -88,7 +98,7 @@ export const authApi = {
         api('/auth/verify-phone', {
             method: 'POST',
             body: {
-                phoneNumber: phoneNumber.replace(/\D/g, ''),
+                phoneNumber:normalizePhone(phoneNumber),
                 otp
             }
         }),
@@ -108,7 +118,7 @@ export const authApi = {
     sendEmailVerification: (email: string, phoneNumber: string) =>
         api('/auth/send-email-verification', {
             method: 'POST',
-            body: { email, phoneNumber }
+            body: { email, phoneNumber:normalizePhone(phoneNumber) }
         }),
 
     /**
