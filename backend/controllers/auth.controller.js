@@ -2,6 +2,10 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 const Wallet = require('../models/wallet.model');
+const { generateOTP, sendSMSOTP, sendEmailOTP,verifyOTP } = require('../utils/otpUtils');
+
+const otpStore = new Map();
+const emailOtpStore = new Map(); // temporary store for email OTPs
 
 // Generate JWT Token
 const generateToken = (userId) => {
@@ -21,6 +25,16 @@ exports.startRegistration = async (req, res) => {
       return res.status(400).json({ message: 'Phone number already registered' });
     }
 
+
+    //generate the otp
+    const otp =generateOTP();
+
+    const sent = await sendSMSOTP(phoneNumber,otp);
+    if(!sent){
+      return res.status(500).json({message:`failed to send otp`});
+    }
+
+    otpStore.set(phoneNumber,otp);
     // In a real application, you would send an OTP here
     // For now, we'll just return a success message
     res.json({
@@ -37,6 +51,13 @@ exports.verifyPhone = async (req, res) => {
   try {
     const { phoneNumber, otp } = req.body;
 
+    const storedOtp = otpStore.get(phoneNumber);
+    if (!storedOtp || !verifyOTP(otp, storedOtp)) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+     // OTP verified — remove from store
+     otpStore.delete(phoneNumber);
     // In a real application, you would verify the OTP here
     // For now, we'll just return a success message
     res.json({
@@ -97,29 +118,78 @@ exports.registerWithEmail = async (req, res) => {
 };
 
 // Step 4: Verify email
+// exports.verifyEmail = async (req, res) => {
+//   try {
+//     const { email, otp } = req.body;
+
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       return res.status(404).json({ message: 'User not found' });
+//     }
+
+//     // In a real application, you would verify the OTP here
+//     user.isEmailVerified = true;
+//     await user.save();
+
+//     res.json({
+//       message: 'Email verified successfully',
+//       user: {
+//         id: user._id,
+//         email: user.email,
+//         isEmailVerified: user.isEmailVerified
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Error verifying email', error: error.message });
+//   }
+// };
+
 exports.verifyEmail = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
     }
 
-    // In a real application, you would verify the OTP here
-    user.isEmailVerified = true;
-    await user.save();
-
-    res.json({
-      message: 'Email verified successfully',
-      user: {
-        id: user._id,
-        email: user.email,
-        isEmailVerified: user.isEmailVerified
+    // If no OTP is provided → send OTP to email
+    if (!otp) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already registered' });
       }
-    });
+
+      const generatedOtp = generateOTP();
+      const sent = await sendEmailOTP(email, generatedOtp);
+
+      if (!sent) {
+        return res.status(500).json({ message: 'Failed to send OTP' });
+      }
+
+      emailOtpStore.set(email, generatedOtp);
+
+      return res.status(200).json({ message: 'OTP sent to email' });
+    }
+
+    // If both email and OTP provided → verify it
+    const storedOtp = emailOtpStore.get(email);
+
+    if (!storedOtp) {
+      return res.status(400).json({ message: 'No OTP found for this email' });
+    }
+
+    if (otp !== storedOtp) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    // OTP is valid
+    emailOtpStore.delete(email); // cleanup
+
+    return res.status(200).json({ message: 'Email verified successfully' });
+
   } catch (error) {
-    res.status(500).json({ message: 'Error verifying email', error: error.message });
+    console.error('verifyEmail error:', error);
+    res.status(500).json({ message: 'Server error during email verification' });
   }
 };
 

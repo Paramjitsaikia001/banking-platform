@@ -10,6 +10,7 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
     );
 }
 
+
 // Initialize Nodemailer transporter
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -27,21 +28,24 @@ const generateOTP = () => {
 // Send SMS OTP
 const sendSMSOTP = async (phoneNumber, otp) => {
     try {
+        console.log('[sendSMSOTP] Called with phoneNumber:', phoneNumber, 'otp:', otp);
         if (!twilioClient) {
+            console.log('[sendSMSOTP] No Twilio client configured. Logging OTP instead of sending SMS.');
             // Development fallback - just log the OTP
             console.log(`\n🔐 [SMS OTP] Phone: ${phoneNumber} | OTP: ${otp}`);
             console.log(`📱 [SMS OTP] Use this OTP for phone verification: ${otp}\n`);
             return true;
         }
-
+        console.log('[sendSMSOTP] Twilio client found. Attempting to send SMS...');
         await twilioClient.messages.create({
             body: `Your verification code is: ${otp}`,
-            to: phoneNumber,
-            from: process.env.TWILIO_PHONE_NUMBER
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: phoneNumber
         });
+        console.log('[sendSMSOTP] SMS sent successfully to', phoneNumber);
         return true;
     } catch (error) {
-        console.error('Error sending SMS:', error);
+        console.error('[sendSMSOTP] Error sending SMS:', error);
         return false;
     }
 };
@@ -64,9 +68,14 @@ const sendEmailOTP = async (email, otp) => {
         });
         return true;
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('[sendSMSOTP] Error sending SMS:');
+        console.error('Status:', error.status);
+        console.error('Code:', error.code);
+        console.error('Message:', error.message);
+        console.error('More info:', error.moreInfo); // Twilio-specific field
         return false;
     }
+    
 };
 
 // *** MODIFIED: Direct comparison for OTP verification ***

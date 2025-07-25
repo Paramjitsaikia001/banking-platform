@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Menu, X, Bell, User, LogOut, CreditCard, Settings } from "lucide-react"
+import { Menu, X, Bell, User, LogOut, CreditCard, Settings, Home, Calculator, Receipt, HelpCircle } from "lucide-react"
 
 export default function Header() {
   // State management for mobile menu and scroll effects
@@ -170,7 +170,7 @@ export default function Header() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full hidden md:inline-flex">
                     <Avatar className="h-8 w-8 text-lg">
                       <AvatarImage src="/placeholder-user.jpg" alt={`${user.firstName} ${user.lastName}`} />
                       <AvatarFallback>{userEmoji || `${user.firstName?.[0]}${user.lastName?.[0]}`}</AvatarFallback>
@@ -226,66 +226,16 @@ export default function Header() {
             </div>
           )}
 
-          {user ? (
-            // Profile circle for logged-in users
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="md:hidden relative h-8 w-8 rounded-full"
-                >
-                  <Avatar className="h-8 w-8 text-lg">
-                    <AvatarImage src="/placeholder-user.jpg" alt={`${user.firstName} ${user.lastName}`} />
-                    <AvatarFallback>{userEmoji || `${user.firstName?.[0]}${user.lastName?.[0]}`}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <div className="flex items-center justify-start gap-2 p-2">
-                  <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{user.firstName} {user.lastName}</p>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/wallet">
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    <span>Wallet</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/profile/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => { authLogout(); userLogout(); router.push("/"); }}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            // Hamburger menu for non-logged-in users
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden" 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
-          )}
+          {/* Hamburger menu for all users on mobile */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden" 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          >
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </Button>
         </div>
       </div>
 
@@ -314,39 +264,60 @@ export default function Header() {
           {/* Simple navigation for all pages */}
           <nav className="flex flex-col space-y-2">
             <Link 
-              href="/" 
-              className="text-base font-medium py-2 px-4 rounded hover:bg-accent" 
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link 
               href="/dashboard" 
-              className="text-base font-medium py-2 px-4 rounded hover:bg-accent" 
+              className="text-base font-medium py-2 px-4 rounded hover:bg-accent flex items-center gap-2" 
               onClick={() => setIsMenuOpen(false)}
             >
-              Dashboard
+              <span><Home className="inline-block h-5 w-5 mr-2" /></span> Dashboard
             </Link>
             <Link 
               href="/wallet" 
-              className="text-base font-medium py-2 px-4 rounded hover:bg-accent" 
+              className="text-base font-medium py-2 px-4 rounded hover:bg-accent flex items-center gap-2" 
               onClick={() => setIsMenuOpen(false)}
             >
-              Wallet
+              <span><CreditCard className="inline-block h-5 w-5 mr-2" /></span> Wallet
+            </Link>
+            <Link 
+              href="/bank-accounts" 
+              className="text-base font-medium py-2 px-4 rounded hover:bg-accent flex items-center gap-2" 
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span><Calculator className="inline-block h-5 w-5 mr-2" /></span> Bank Accounts
             </Link>
             <Link 
               href="/bills" 
-              className="text-base font-medium py-2 px-4 rounded hover:bg-accent" 
+              className="text-base font-medium py-2 px-4 rounded hover:bg-accent flex items-center gap-2" 
               onClick={() => setIsMenuOpen(false)}
             >
-              Bills
+              <span><Receipt className="inline-block h-5 w-5 mr-2" /></span> Bills
+            </Link>
+            <Link 
+              href="/notifications" 
+              className="text-base font-medium py-2 px-4 rounded hover:bg-accent flex items-center gap-2" 
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span><Bell className="inline-block h-5 w-5 mr-2" /></span> Notifications
             </Link>
             <Link 
               href="/profile" 
-              className="text-base font-medium py-2 px-4 rounded hover:bg-accent" 
+              className="text-base font-medium py-2 px-4 rounded hover:bg-accent flex items-center gap-2" 
               onClick={() => setIsMenuOpen(false)}
             >
-              Profile
+              <span><User className="inline-block h-5 w-5 mr-2" /></span> Profile
+            </Link>
+            <Link 
+              href="/profile/settings" 
+              className="text-base font-medium py-2 px-4 rounded hover:bg-accent flex items-center gap-2" 
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span><Settings className="inline-block h-5 w-5 mr-2" /></span> Settings
+            </Link>
+            <Link 
+              href="/support" 
+              className="text-base font-medium py-2 px-4 rounded hover:bg-accent flex items-center gap-2" 
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span><HelpCircle className="inline-block h-5 w-5 mr-2" /></span> Help & Support
             </Link>
           </nav>
 
