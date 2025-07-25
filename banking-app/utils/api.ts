@@ -75,7 +75,8 @@ export const authApi = {
     startRegistration: (phoneNumber: string) =>
         api('/auth/start-registration', {
             method: 'POST',
-            body: { phoneNumber: phoneNumber.replace(/\D/g, '') } // Remove non-digits
+            // body: { phoneNumber: phoneNumber.replace(/\D/g, '') } // Remove non-digits
+            body: { phoneNumber } // ✅ keep the +91
         }),
 
     /**
